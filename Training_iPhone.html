@@ -1,0 +1,1988 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Training</title>
+
+<!-- ═══ PWA / iOS HOME SCREEN ═══ -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Training">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1d24">
+<meta name="description" content="PPL Pro — Tracker d'entraînement personnel">
+
+<!-- iOS Touch Icons (généré inline via canvas) -->
+<link rel="apple-touch-icon" id="pwa-icon" href="">
+
+<!-- Manifest inline -->
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Training%22%2C%22short_name%22%3A%22Training%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231a1d24%22%2C%22theme_color%22%3A%22%231a1d24%22%7D">
+
+<script>
+// Générer une icône Apple Touch dynamiquement
+(function(){
+  const c=document.createElement('canvas');c.width=180;c.height=180;
+  const ctx=c.getContext('2d');
+  // Background
+  ctx.fillStyle='#1a1d24';ctx.fillRect(0,0,180,180);
+  // Border radius effect (clip)
+  // Text "T" stylisé
+  ctx.font='bold 110px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+  const g=ctx.createLinearGradient(30,30,150,150);
+  g.addColorStop(0,'#f5c842');g.addColorStop(0.5,'#ff6b35');g.addColorStop(1,'#34d399');
+  ctx.fillStyle=g;ctx.fillText('T',90,95);
+  const dataURL=c.toDataURL('image/png');
+  const link=document.getElementById('pwa-icon');
+  if(link)link.href=dataURL;
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1d24;--surface:#21252f;--card:#272c38;--card2:#2e3444;
+  --border:#363d4f;--border2:#4a536a;
+  --push:#f5c842;--push-dim:rgba(245,200,66,0.12);
+  --pull:#ff6b35;--pull-dim:rgba(255,107,53,0.12);
+  --legs:#34d399;--legs-dim:rgba(52,211,153,0.12);
+  --abs:#c084fc;--abs-dim:rgba(192,132,252,0.12);
+  --warm:#fb923c;--cool:#60a5fa;
+  --green:#4ade80;--red:#f87171;
+  --pr:#fbbf24;--text:#e8eaf0;--muted:#6b7494;--muted2:#9aa3bf;
+  --faint:#1f232d;--hiit:#f472b6;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;height:100%;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:16px;min-height:100vh;overflow-x:hidden;
+  padding-left:var(--safe-left);padding-right:var(--safe-right);
+  -webkit-overflow-scrolling:touch;overscroll-behavior-y:none}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 0%,rgba(245,200,66,0.03) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(52,211,153,0.03) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+/* HEADER */
+.header{background:rgba(26,29,36,0.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:14px 18px 0;padding-top:calc(14px + var(--safe-top));position:sticky;top:0;z-index:200}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:30px;letter-spacing:6px;line-height:1}
+.logo .p{color:var(--push)}.logo .pl{color:var(--pull)}.logo .l{color:var(--legs)}
+.logo-badge{font-size:9px;font-weight:700;letter-spacing:3px;background:linear-gradient(135deg,var(--push),var(--legs));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-left:6px}
+.session-timer{display:flex;align-items:center;gap:6px}
+.timer-display{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:22px;letter-spacing:2px;color:var(--green);min-width:56px;text-align:right}
+.timer-btns{display:flex;gap:4px}
+.timer-btn{height:30px;border-radius:16px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;padding:0 12px;transition:transform .15s}
+.timer-btn:active{transform:scale(0.9)}
+.timer-start{background:var(--green);color:#000}
+.timer-stop{background:var(--red);color:#fff}
+.timer-reset{background:var(--border2);color:var(--muted2)}
+
+/* TABS */
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none;margin:0 -18px;padding:0 18px}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0;padding:10px 12px;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;letter-spacing:2px;text-transform:uppercase;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab-btn.aw{color:var(--warm)}.tab-btn.aabs{color:var(--abs)}.tab-btn.ap{color:var(--push)}.tab-btn.apl{color:var(--pull)}.tab-btn.al{color:var(--legs)}.tab-btn.ac{color:var(--cool)}.tab-btn.ahiit{color:var(--hiit)}.tab-btn.atrack{color:var(--green)}.tab-btn.aplan{color:var(--text)}
+.tab-btn.aw.on{border-bottom-color:var(--warm)}.tab-btn.aabs.on{border-bottom-color:var(--abs)}.tab-btn.ap.on{border-bottom-color:var(--push)}.tab-btn.apl.on{border-bottom-color:var(--pull)}.tab-btn.al.on{border-bottom-color:var(--legs)}.tab-btn.ac.on{border-bottom-color:var(--cool)}.tab-btn.ahiit.on{border-bottom-color:var(--hiit)}.tab-btn.atrack.on{border-bottom-color:var(--green)}.tab-btn.aplan.on{border-bottom-color:var(--text)}
+
+/* PAGES */
+.page{display:none;padding:16px 18px;padding-bottom:calc(120px + var(--safe-bottom));animation:fadeUp .25s ease both}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* REST OVERLAY */
+#rest-overlay{position:fixed;inset:0;background:rgba(10,12,18,0.94);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-bottom:var(--safe-bottom)}
+#rest-overlay.show{display:flex}
+.rest-circle-wrap{position:relative;width:180px;height:180px;margin-bottom:20px}
+.rest-svg{width:180px;height:180px;transform:rotate(-90deg)}
+.rest-track{fill:none;stroke:var(--border2);stroke-width:8}
+.rest-prog{fill:none;stroke:var(--green);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s linear;stroke-dasharray:502;stroke-dashoffset:0}
+.rest-prog.warn{stroke:var(--push)}.rest-prog.urg{stroke:var(--red)}
+.rest-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.rest-count{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:58px;line-height:1;color:var(--text)}
+.rest-sublabel{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--muted2)}
+.rest-overlay-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:2px;color:var(--muted2);margin-bottom:6px}
+.rest-presets-ov{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;justify-content:center}
+.rp-ov{background:var(--faint);border:1px solid var(--border2);color:var(--muted2);border-radius:20px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Barlow',sans-serif}
+.rp-ov.active,.rp-ov:hover{background:var(--green);border-color:var(--green);color:#000}
+.rest-skip-btn{background:var(--border2);color:var(--text);border:none;border-radius:30px;padding:12px 32px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:2px;cursor:pointer}
+
+/* DAY INTRO */
+.day-intro{margin-bottom:16px;padding:18px;border-radius:18px;border:1px solid var(--border);position:relative;overflow:hidden}
+.day-intro::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;opacity:.06;filter:blur(30px)}
+.day-intro::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;border-radius:0 0 18px 18px;opacity:.5}
+.push.day-intro{border-color:rgba(245,200,66,.25);background:linear-gradient(135deg,rgba(245,200,66,.04),transparent)}
+.push.day-intro::before{background:var(--push)}.push.day-intro::after{background:linear-gradient(90deg,transparent,var(--push),transparent)}
+.pull.day-intro{border-color:rgba(255,94,58,.25);background:linear-gradient(135deg,rgba(255,94,58,.04),transparent)}
+.pull.day-intro::before{background:var(--pull)}.pull.day-intro::after{background:linear-gradient(90deg,transparent,var(--pull),transparent)}
+.legs.day-intro{border-color:rgba(58,232,192,.25);background:linear-gradient(135deg,rgba(58,232,192,.04),transparent)}
+.legs.day-intro::before{background:var(--legs)}.legs.day-intro::after{background:linear-gradient(90deg,transparent,var(--legs),transparent)}
+.abs.day-intro{border-color:rgba(192,132,252,.25);background:linear-gradient(135deg,rgba(192,132,252,.04),transparent)}
+.abs.day-intro::before{background:var(--abs)}
+.warm.day-intro{border-color:rgba(251,146,60,.25);background:linear-gradient(135deg,rgba(251,146,60,.04),transparent)}
+.warm.day-intro::before{background:var(--warm)}.warm.day-intro::after{background:linear-gradient(90deg,transparent,var(--warm),transparent)}
+.cool.day-intro{border-color:rgba(96,165,250,.25);background:linear-gradient(135deg,rgba(96,165,250,.04),transparent)}
+.cool.day-intro::before{background:var(--cool)}
+.hiit.day-intro{border-color:rgba(244,114,182,.25);background:linear-gradient(135deg,rgba(244,114,182,.04),transparent)}
+.hiit.day-intro::before{background:var(--hiit)}
+.day-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:36px;letter-spacing:4px;line-height:1;text-transform:uppercase}
+.push .day-title{color:var(--push)}.pull .day-title{color:var(--pull)}.legs .day-title{color:var(--legs)}.warm .day-title{color:var(--warm)}.cool .day-title{color:var(--cool)}.abs .day-title{color:var(--abs)}.hiit .day-title{color:var(--hiit)}
+.day-muscles{font-size:12px;color:var(--muted2);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.day-meta{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.meta-pill{background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--muted2)}
+.meta-pill b{color:var(--text)}
+.meta-pill.day-push{border-color:rgba(245,200,66,.4);color:var(--push)}
+.meta-pill.day-pull{border-color:rgba(255,94,58,.4);color:var(--pull)}
+.meta-pill.day-legs{border-color:rgba(58,232,192,.4);color:var(--legs)}
+
+/* WARMUP DAY SELECTOR */
+.warm-day-selector{display:flex;gap:8px;margin-bottom:18px}
+.warm-day-btn{flex:1;padding:10px 8px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;text-align:center}
+.warm-day-btn:hover{border-color:var(--border2);color:var(--text)}
+.warm-day-btn.sel-push{background:var(--push-dim);color:var(--push);border-color:var(--push)}
+.warm-day-btn.sel-pull{background:var(--pull-dim);color:var(--pull);border-color:var(--pull)}
+.warm-day-btn.sel-legs{background:var(--legs-dim);color:var(--legs);border-color:var(--legs)}
+.warm-block{display:none}
+.warm-block.active{display:block;animation:fadeUp .2s ease both}
+.warm-tip{border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.7;color:var(--muted2);margin-top:14px}
+.warm-push-tip{background:rgba(245,200,66,.04);border-left:3px solid var(--push)}
+.warm-pull-tip{background:rgba(255,94,58,.04);border-left:3px solid var(--pull)}
+.warm-legs-tip{background:rgba(58,232,192,.04);border-left:3px solid var(--legs)}
+.warm-tip strong{color:var(--text);display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+
+/* PROGRESS BAR */
+.session-progress{margin-bottom:16px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px}
+.sp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sp-label{font-size:12px;color:var(--muted2);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase}
+.sp-count{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px}
+.sp-bar-bg{height:5px;background:var(--border);border-radius:4px;overflow:hidden}
+.sp-bar-fill{height:100%;border-radius:4px;transition:width .4s ease}
+
+/* WEEK BAR */
+.week-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:8px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px}
+.week-bar-label{flex:1;font-size:13px;color:var(--muted2)}
+.week-bar-label b{color:var(--text)}
+.week-num-btn{background:var(--faint);border:1px solid var(--border2);color:var(--text);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:14px;font-weight:700;transition:all .15s;line-height:1}
+.week-num-btn:hover{background:var(--green);color:#000;border-color:var(--green)}
+.deload-tag{background:rgba(245,200,66,.15);color:var(--push);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:1px}
+
+/* SECTION LABEL */
+.section-label{font-family:'Rajdhani',sans-serif;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin:20px 0 10px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* EXERCISE CARD */
+.ex-card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .25s,box-shadow .25s,opacity .3s;cursor:pointer}
+.ex-card:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.25)}
+.ex-card.expanded{border-color:var(--border2);box-shadow:0 4px 24px rgba(0,0,0,.5);transform:none}
+.ex-card.done-ex{opacity:0.42;border-color:var(--green)!important}
+.ex-card-main{display:flex;align-items:stretch}
+.ex-illus{width:78px;min-width:78px;display:flex;align-items:center;justify-content:center;padding:10px 5px;border-right:1px solid var(--border)}
+.push .ex-illus{background:rgba(245,200,66,.04)}.pull .ex-illus{background:rgba(255,94,58,.04)}.legs .ex-illus{background:rgba(58,232,192,.04)}.abs .ex-illus{background:rgba(192,132,252,.04)}.warm .ex-illus{background:rgba(251,146,60,.04)}.cool .ex-illus{background:rgba(96,165,250,.04)}
+.ex-illus svg{width:52px;height:52px}
+.ex-info{flex:1;padding:11px 10px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.ex-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;letter-spacing:1px;line-height:1.2}
+.done-ex .ex-name::before{content:'✓ ';color:var(--green)}
+.ex-cue{font-size:12px;color:var(--muted2);margin-top:2px;line-height:1.5}
+.ex-muscles{font-size:11px;color:var(--muted);margin-top:2px;font-style:italic}
+.ex-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.ex-tag{display:inline-block;font-size:10px;letter-spacing:1px;padding:2px 7px;border-radius:8px;font-weight:700;text-transform:uppercase}
+.tag-bar{background:rgba(245,200,66,.12);color:var(--push)}.tag-machine{background:rgba(120,120,255,.12);color:#9b8fff}.tag-cable{background:rgba(58,200,255,.12);color:#58c8ff}.tag-bw{background:rgba(200,200,200,.08);color:#bbb}.tag-db{background:rgba(255,160,58,.12);color:#ffa03a}.tag-smith{background:rgba(74,222,128,.1);color:var(--green)}
+.ex-right{min-width:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 12px 0 4px;gap:3px}
+.sets-num{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:22px;line-height:1}
+.push .sets-num{color:var(--push)}.pull .sets-num{color:var(--pull)}.legs .sets-num{color:var(--legs)}.abs .sets-num{color:var(--abs)}.warm .sets-num{color:var(--warm)}.cool .sets-num{color:var(--cool)}
+.sets-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.expand-arrow{font-size:11px;color:var(--muted);transition:transform .25s;margin-top:2px}
+.ex-card.expanded .expand-arrow{transform:rotate(180deg)}
+
+/* ── LIVE PR STRIP — shown always under ex-info ── */
+.ex-pr-strip{display:flex;align-items:center;gap:6px;margin-top:5px;padding:4px 8px;background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.15);border-radius:8px;min-height:24px}
+.ex-pr-strip-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;flex-shrink:0}
+.ex-pr-strip-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--pr);letter-spacing:.5px}
+.ex-pr-strip-val.no-pr{color:var(--muted);font-size:12px;font-weight:400;font-family:'Barlow',sans-serif}
+@keyframes prPop{0%{transform:scale(0) rotate(-10deg);opacity:0}60%{transform:scale(1.2) rotate(3deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.pr-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#b8860b,var(--pr),#b8860b);color:#000;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:1px;padding:2px 8px;border-radius:16px;animation:prPop .4s cubic-bezier(.34,1.56,.64,1) both;box-shadow:0 0 10px rgba(255,215,0,.4)}
+
+/* EXPANDED PANEL */
+.ex-panel{display:none;border-top:1px solid var(--border);padding:14px 16px;background:var(--faint)}
+.ex-card.expanded .ex-panel{display:block;animation:fadeUp .2s ease both}
+.muscles-detail{font-size:12px;color:var(--muted2);margin-bottom:12px;padding:9px 12px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--border);line-height:1.6}
+.muscles-detail strong{color:var(--text);font-size:11px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:3px}
+.warmup-set-row{background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.15);border-radius:8px;padding:7px 10px;margin-bottom:10px;font-size:12px;color:var(--muted2);display:flex;gap:8px;align-items:center}
+.ws-label{color:var(--push);font-weight:700;font-size:11px;letter-spacing:1px;white-space:nowrap;font-family:'Barlow Condensed',sans-serif}
+
+/* INLINE TRACKER */
+.inline-tracker{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:12px;margin-bottom:12px}
+.it-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.it-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'Barlow Condensed',sans-serif}
+.it-pr-info{font-size:11px;color:var(--muted);text-align:right;line-height:1.4}
+.it-pr-info b{color:var(--pr);font-family:'Barlow Condensed',sans-serif;font-size:14px;display:block}
+.it-pr-info .it-pr-suggestion{color:var(--green);font-size:10px;letter-spacing:.5px}
+.it-series-row{display:flex;gap:6px;align-items:center;margin-bottom:7px;padding:7px 10px;background:var(--faint);border-radius:8px;transition:background .2s,border .2s;border:1px solid transparent}
+.it-series-row.is-pr{background:rgba(255,215,0,.06);border-color:rgba(255,215,0,.25)}
+.it-s-label{font-size:13px;color:var(--muted);width:22px;font-weight:700;font-family:'Barlow Condensed',sans-serif}
+.it-input{background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:17px;padding:6px 8px;width:68px;text-align:center;-moz-appearance:textfield}
+.it-input::-webkit-inner-spin-button,.it-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.it-input:focus{outline:none;border-color:var(--green)}
+.it-unit{font-size:12px;color:var(--muted)}
+.it-rest-btn{margin-left:auto;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:10px;color:var(--push);font-size:11px;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:1px;padding:4px 10px;cursor:pointer;transition:all .15s}
+.it-rest-btn:hover{background:rgba(0,212,255,.2)}
+.it-note-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:8px;margin-bottom:4px}
+.it-note{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:13px;padding:7px 10px;resize:none;min-height:40px;transition:border-color .2s}
+.it-note:focus{outline:none;border-color:var(--green)}
+.it-note::placeholder{color:var(--muted)}
+.it-pr-badge{display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#b8860b,var(--pr),#b8860b);color:#000;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:11px;letter-spacing:1px;padding:2px 8px;border-radius:16px;animation:prPop .4s cubic-bezier(.34,1.56,.64,1) both;box-shadow:0 0 10px rgba(255,215,0,.4)}
+
+/* POST SERIES REST */
+.post-series-rest{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(74,222,128,.04);border-radius:8px;border:1px solid rgba(74,222,128,.12);margin-bottom:8px;font-size:12px;color:var(--muted2)}
+.psr-icon{font-size:14px}
+.psr-btn{margin-left:auto;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);color:var(--green);border-radius:8px;padding:4px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;letter-spacing:1px;transition:all .15s}
+.psr-btn:hover{background:rgba(74,222,128,.25)}
+
+/* VARIANTS */
+.variants-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;margin-top:4px}
+.variant-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.variant-chip{background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:4px 10px;font-size:11px;color:var(--muted2)}
+
+/* DONE BTN */
+.done-btn{width:100%;padding:11px;border-radius:10px;border:1px solid rgba(0,255,170,.3);background:rgba(0,255,170,.06);color:var(--green);font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-top:6px}
+.done-btn.is-done{background:rgba(0,255,170,.18);border-color:var(--green)}
+.done-btn:active{transform:scale(.98)}
+
+/* TIP */
+.tip{border-radius:12px;padding:13px 16px;margin-top:16px;font-size:12px;line-height:1.7;color:var(--muted2)}
+.push .tip{background:rgba(245,200,66,.04);border-left:3px solid var(--push)}
+.pull .tip{background:rgba(255,94,58,.04);border-left:3px solid var(--pull)}
+.legs .tip{background:rgba(58,232,192,.04);border-left:3px solid var(--legs)}
+.abs .tip{background:rgba(192,132,252,.04);border-left:3px solid var(--abs)}
+.tip strong{color:var(--text);display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px}
+
+/* END SESSION */
+.end-session-wrap{margin-top:24px}
+.end-session-btn{width:100%;padding:18px;border-radius:16px;border:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:20px;letter-spacing:4px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.push-end{background:linear-gradient(135deg,rgba(245,200,66,.15),rgba(245,200,66,.05));border:1px solid rgba(245,200,66,.4);color:var(--push)}
+.pull-end{background:linear-gradient(135deg,rgba(255,94,58,.15),rgba(255,94,58,.05));border:1px solid rgba(255,94,58,.4);color:var(--pull)}
+.legs-end{background:linear-gradient(135deg,rgba(58,232,192,.15),rgba(58,232,192,.05));border:1px solid rgba(58,232,192,.4);color:var(--legs)}
+.end-session-btn:active{transform:scale(.98)}
+.end-session-btn:hover{filter:brightness(1.2)}
+
+/* INLINE TIMER */
+.inline-timer-wrap{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.inline-timer-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.inline-presets{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+.ipreset{background:var(--faint);border:1px solid var(--border2);border-radius:12px;color:var(--muted2);padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Barlow',sans-serif;font-weight:600;transition:all .15s}
+.ipreset.isel,.ipreset:hover{background:rgba(74,222,128,.12);border-color:var(--green);color:var(--green)}
+.inline-timer-main{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.inline-arc{width:36px;height:36px;transform:rotate(-90deg)}
+.inline-display{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:var(--text);letter-spacing:1px}
+.inline-display.warn{color:var(--push)}.inline-display.urg{color:var(--red)}.inline-display.done{color:var(--green)}
+.itimer-btns{display:flex;gap:6px}
+.itbtn{padding:6px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;transition:all .15s}
+.itbtn.start{background:var(--green);color:#000}.itbtn.stop{background:var(--red);color:#fff}.itbtn.reset-t{background:var(--border2);color:var(--muted2)}
+
+/* TRACKER */
+.tracker-header{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:28px;letter-spacing:3px;color:var(--green);margin-bottom:4px}
+.tracker-sub{font-size:11px;color:var(--muted);margin-bottom:14px}
+.day-select{display:flex;gap:6px;margin-bottom:12px}
+.day-sel-btn{flex:1;padding:9px 6px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;transition:all .2s}
+.day-sel-btn.sel-push{background:var(--push-dim);color:var(--push);border-color:var(--push)}
+.day-sel-btn.sel-pull{background:var(--pull-dim);color:var(--pull);border-color:var(--pull)}
+.day-sel-btn.sel-legs{background:var(--legs-dim);color:var(--legs);border-color:var(--legs)}
+.week-sel{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:9px 12px;background:var(--faint);border-radius:10px;border:1px solid var(--border)}
+.week-sel-label{flex:1;font-size:12px;color:var(--muted)}
+.week-sel-label b{color:var(--text);font-size:14px}
+.track-form{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
+.track-form.has-pr{border-color:rgba(255,215,0,.3);box-shadow:0 0 18px rgba(255,215,0,.06)}
+.track-ex-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:8px}
+.track-ex-name{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px}
+.track-pr-block{text-align:right;flex-shrink:0}
+.track-pr-block .track-best{font-size:10px;color:var(--muted);display:block}
+.track-pr-block .track-pr-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--pr);display:block;line-height:1.2}
+.track-pr-block .track-pr-suggest{font-size:10px;color:var(--green);display:block;margin-top:1px}
+.series-row{display:flex;gap:6px;align-items:center;margin-bottom:7px;padding:6px 10px;background:var(--faint);border-radius:8px;border:1px solid transparent;transition:all .2s}
+.series-row.is-pr{background:rgba(255,215,0,.05);border-color:rgba(255,215,0,.25)}
+.series-label{font-size:12px;color:var(--muted);width:24px;font-weight:700;font-family:'Barlow Condensed',sans-serif}
+.track-input{background:var(--card2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;padding:6px 8px;width:66px;text-align:center;-moz-appearance:textfield}
+.track-input::-webkit-inner-spin-button,.track-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.track-input:focus{outline:none;border-color:var(--green)}
+.unit-label{font-size:11px;color:var(--muted)}
+.rest-trigger{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:10px;color:var(--green);font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;padding:4px 8px;cursor:pointer;margin-left:auto;transition:all .15s}
+.rest-trigger:hover{background:rgba(74,222,128,.18)}
+.track-note-wrap{margin-top:8px}
+.track-note{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:12px;padding:6px 10px;resize:none;min-height:36px;transition:border-color .2s}
+.track-note:focus{outline:none;border-color:var(--green)}
+.track-note::placeholder{color:var(--muted)}
+.save-btn{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--green),rgba(0,255,170,0.7));color:#000;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;letter-spacing:3px;cursor:pointer;margin-top:14px;transition:opacity .2s,transform .1s}
+.save-btn:hover{opacity:.9}.save-btn:active{transform:scale(.99)}
+.chart-section{margin-top:20px}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.chart-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:1px;color:var(--green)}
+.chart-ex-select{background:var(--faint);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;padding:5px 8px;font-family:'Barlow',sans-serif;cursor:pointer}
+.chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 10px;overflow:hidden}
+canvas#prog-chart{width:100%!important;height:140px!important;display:none}
+.chart-empty{text-align:center;color:var(--muted);font-size:12px;padding:24px 0}
+.history-section{margin-top:20px}
+.history-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:1px;color:var(--green);margin-bottom:10px}
+.history-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.history-date{font-size:11px;color:var(--muted);margin-bottom:6px}
+.history-ex{font-size:12px;color:var(--text);margin-bottom:3px}
+.history-ex span{color:var(--green);font-weight:600}
+.history-ex .hpr{color:var(--pr);font-weight:700}
+.no-history{text-align:center;color:var(--muted);font-size:12px;padding:26px 0}
+.io-wrap{display:flex;gap:8px;margin-top:12px}
+.export-btn,.import-btn{flex:1;padding:10px 12px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer;transition:opacity .2s;text-align:center;display:block}
+.export-btn{border:1px solid var(--green);background:rgba(74,222,128,.07);color:var(--green)}.import-btn{border:1px solid var(--cool);background:rgba(96,165,250,.07);color:var(--cool)}
+.clear-btn{background:transparent;border:1px solid rgba(239,68,68,.35);color:rgba(239,68,68,.7);border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:'Barlow',sans-serif;margin-top:8px;width:100%;transition:all .15s}
+.clear-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* PLAN */
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.info-card h3{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;letter-spacing:2px;margin-bottom:12px}
+.info-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);gap:10px}
+.info-row:last-child{border:none}
+.info-row .label{color:var(--muted2);flex:1}.info-row .val{color:var(--text);font-weight:600;text-align:right;font-size:11px}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:10px}
+.wday{border-radius:6px;padding:8px 2px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;border:1px solid transparent}
+.wday .dname{font-size:8px;display:block;margin-bottom:2px;opacity:.7}
+.wday.p{background:rgba(245,200,66,.1);color:var(--push);border-color:rgba(245,200,66,.2)}
+.wday.pu{background:rgba(255,94,58,.1);color:var(--pull);border-color:rgba(255,94,58,.2)}
+.wday.l{background:rgba(58,232,192,.1);color:var(--legs);border-color:rgba(58,232,192,.2)}
+.wday.h{background:rgba(244,114,182,.1);color:var(--hiit);border-color:rgba(244,114,182,.2)}
+.wday.r{background:var(--faint);color:var(--muted)}
+.deload-plan{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.deload-week{background:var(--faint);border:1px solid var(--border);border-radius:8px;padding:7px 8px;text-align:center;flex:1;min-width:42px}
+.deload-week.active{background:rgba(245,200,66,.08);border-color:rgba(245,200,66,.3)}
+.deload-week-num{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--muted2)}
+.deload-week.active .deload-week-num{color:var(--push)}
+.deload-week-label{font-size:9px;color:var(--muted);margin-top:1px}
+.deload-week.active .deload-week-label{color:var(--push)}
+
+/* HIIT */
+.hiit-card{background:var(--card);border:1px solid rgba(244,114,182,.2);border-radius:14px;padding:16px;margin-bottom:12px}
+.hiit-card h3{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;letter-spacing:1px;color:var(--hiit);margin-bottom:12px}
+.hiit-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);color:var(--muted2)}
+.hiit-row:last-child{border:none}.hiit-row .val{color:var(--text);font-weight:600}
+.freeletics-badge{display:flex;align-items:center;gap:8px;background:rgba(244,114,182,.06);border:1px solid rgba(244,114,182,.2);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--muted2)}
+.freeletics-icon{font-size:18px}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* SYNTH CARDS (warmup / cooldown summaries) */
+.synth-card{border-radius:14px;border:1px solid var(--border);padding:14px 16px;margin-bottom:14px}
+.synth-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.synth-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;letter-spacing:2px;text-transform:uppercase}
+.synth-time{font-size:11px;color:var(--muted);letter-spacing:1px}
+.synth-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;color:var(--muted2);border-bottom:1px solid var(--border)}
+.synth-row:last-of-type{border:none}
+.synth-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.synth-tip{font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);letter-spacing:.5px}
+
+</style>
+<style>
+
+.it-dup-btn{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:8px;color:var(--green);font-size:14px;width:28px;height:32px;cursor:pointer;transition:all .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700}
+.it-dup-btn:hover{background:rgba(74,222,128,.25);border-color:var(--green)}
+.it-dup-btn:active{transform:scale(.9)}
+
+/* ═══ iOS OPTIMIZATIONS ═══ */
+input, textarea, select {
+  font-size: 16px !important; /* Prevent iOS auto-zoom on focus */
+  -webkit-appearance: none;
+  border-radius: 8px;
+}
+button { cursor: pointer; touch-action: manipulation; }
+.tab-btn { touch-action: manipulation; }
+.ex-card { touch-action: manipulation; }
+/* Prevent bounce scroll on iOS but allow page scroll */
+.page { -webkit-overflow-scrolling: touch; }
+
+/* PWA Install Banner */
+#pwa-banner{display:none;position:fixed;bottom:calc(16px + var(--safe-bottom));left:50%;transform:translateX(-50%);z-index:1000;background:var(--card);border:1px solid var(--green);border-radius:16px;padding:12px 18px;max-width:320px;width:calc(100% - 32px);box-shadow:0 8px 32px rgba(0,0,0,.5);animation:fadeUp .3s ease both}
+#pwa-banner.show{display:flex;align-items:center;gap:10px}
+.pwa-banner-icon{font-size:28px;flex-shrink:0}
+.pwa-banner-text{flex:1;font-size:12px;color:var(--muted2);line-height:1.4}
+.pwa-banner-text b{display:block;color:var(--green);font-size:13px;margin-bottom:2px}
+.pwa-banner-close{color:var(--muted);font-size:18px;padding:4px;line-height:1;cursor:pointer;flex-shrink:0}
+
+</style>
+</head>
+<body>
+
+<!-- REST OVERLAY -->
+<div id="rest-overlay">
+
+<!-- PWA INSTALL BANNER (iOS) -->
+<div id="pwa-banner">
+  <div class="pwa-banner-icon">📲</div>
+  <div class="pwa-banner-text">
+    <b>Installer sur l'écran d'accueil</b>
+    Appuie sur <b>Partager</b> puis <b>"Sur l'écran d'accueil"</b>
+  </div>
+  <div class="pwa-banner-close" onclick="dismissPWABanner()">✕</div>
+</div>
+  <div class="rest-overlay-title">TEMPS DE REPOS</div>
+  <div class="rest-presets-ov">
+    <button class="rp-ov" onclick="setRestDuration(30)">30s</button>
+    <button class="rp-ov" onclick="setRestDuration(45)">45s</button>
+    <button class="rp-ov" onclick="setRestDuration(60)">60s</button>
+    <button class="rp-ov active" onclick="setRestDuration(90)">90s</button>
+    <button class="rp-ov" onclick="setRestDuration(120)">2 min</button>
+    <button class="rp-ov" onclick="setRestDuration(180)">3 min</button>
+  </div>
+  <div class="rest-circle-wrap">
+    <svg class="rest-svg" viewBox="0 0 180 180">
+      <circle class="rest-track" cx="90" cy="90" r="80"/>
+      <circle class="rest-prog" id="rest-prog-circle" cx="90" cy="90" r="80"/>
+    </svg>
+    <div class="rest-center">
+      <div class="rest-count" id="rest-count">90</div>
+      <div class="rest-sublabel">secondes</div>
+    </div>
+  </div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:20px;text-align:center">Reprends quand tu es prêt</div>
+  <button class="rest-skip-btn" onclick="skipRest()">⏭ PASSER</button>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div><div class="logo" style="font-size:22px;letter-spacing:3px"><span class="p">T</span><span class="pl">R</span><span class="l">A</span><span style="color:var(--hiit)">I</span><span style="color:var(--cool)">N</span><span style="color:var(--abs)">I</span><span style="color:var(--text)">N</span><span style="color:var(--muted2)">G</span></div></div>
+    <div class="session-timer">
+      <div class="timer-display" id="session-display">00:00</div>
+      <div class="timer-btns">
+        <button class="timer-btn timer-start" id="session-btn" onclick="toggleSession()">▶</button>
+        <button class="timer-btn timer-reset" onclick="resetSession()">↺</button>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn ap on" onclick="show('push',this,'ap')">DIM · PUSH</button>
+    <button class="tab-btn apl" onclick="show('pull',this,'apl')">MAR · PULL</button>
+    <button class="tab-btn al" onclick="show('legs',this,'al')">JEU · LEGS</button>
+    <button class="tab-btn ahiit" onclick="show('upper',this,'ahiit')">VEN · UPPER</button>
+    <button class="tab-btn atrack" onclick="show('track',this,'atrack')">📊 SUIVI</button>
+    <button class="tab-btn aplan" onclick="show('plan',this,'aplan')">📋 PLAN</button>
+  </div>
+</div>
+
+<!-- ===== PUSH ===== -->
+<div class="page push active" id="page-push">
+  <div class="day-intro push">
+    <div class="day-title">PUSH DAY</div>
+    <div class="day-muscles">Pectoraux · Épaules · Triceps</div>
+    <div class="day-meta"><div class="meta-pill day-push">📅 DIMANCHE</div><div class="meta-pill">⏱ <b>~65 min</b></div><div class="meta-pill" style="border-color:rgba(192,132,252,.4);color:var(--abs)">🔥 Abdos</div><div class="meta-pill" style="border-color:rgba(248,113,113,.4);color:var(--red)">❌ Pas de cardio</div></div>
+  </div>
+      <div class="synth-card" style="border-color:rgba(251,146,60,0.3); background:linear-gradient(135deg,rgba(251,146,60,0.04),transparent)">
+    <div class="synth-header">
+      <span class="synth-title" style="color:var(--warm)">🔥 ÉCHAUFFEMENT</span>
+      <span class="synth-time">8 min · Sans repos</span>
+    </div>
+    <div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Shoulder Circles + W-Y-T — 40s</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Bras croisés + rotation externe — 40s</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Push-up lents d'activation — 2×8 reps</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Cat-Cow + rotation thoracique — 14 reps</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Corde à sauter + shadow boxing — 2 min</span></div>
+    <div class="synth-tip">Mobilité épaules → Activation pecs → Cardio léger</div>
+  </div>
+      <div class="session-progress push" id="progress-push">
+    <div class="sp-top"><div class="sp-label">Progression séance</div><div class="sp-count" id="progress-push-text" style="color:var(--push)">0 / 5</div></div>
+    <div class="sp-bar-bg"><div class="sp-bar-fill" id="progress-push-bar" style="width:0%;background:var(--push)"></div></div>
+  </div>
+  <div class="section-label">Composés — Force & Masse</div>
+
+  <!-- PUSH EX 0: Développé couché barre -->
+  <div class="ex-card push" id="push-ex-0" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="6" y="32" width="40" height="5" rx="2" fill="#2a2a2a"/><rect x="7" y="37" width="3" height="8" rx="1" fill="#222"/><rect x="42" y="37" width="3" height="8" rx="1" fill="#222"/><rect x="2" y="14" width="48" height="5" rx="2" fill="#555"/><rect x="0" y="10" width="6" height="13" rx="2" fill="var(--push)"/><rect x="46" y="10" width="6" height="13" rx="2" fill="var(--push)"/><ellipse cx="26" cy="31" rx="9" ry="3" fill="#3a3a3a"/><circle cx="26" cy="27" r="4" fill="#666"/><line x1="20" y1="30" x2="10" y2="19" stroke="#555" stroke-width="3" stroke-linecap="round"/><line x1="32" y1="30" x2="42" y2="19" stroke="#555" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Développé Couché Barre</div>
+        <div class="ex-cue">Descente 3s, coudes 45°, omoplates rétractées, toucher la poitrine</div>
+        <div class="ex-muscles">🎯 Grand pectoral, deltoïde ant., triceps</div>
+        <div class="ex-tags"><span class="ex-tag tag-bar">Barre</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-push-0">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">4×6–8</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="warmup-set-row"><span class="ws-label">🔆 Échauff.</span><span>2×10 barre vide → 1×6 à 50% → 1×4 à 75%</span></div>
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="push-pr-0">—</b><span class="it-pr-suggestion" id="push-sug-0"></span></div></div>
+        <div id="push-sets-0"></div>
+        <div class="it-note-label">Notes</div>
+        <textarea class="it-note" id="push-note-0" placeholder="Charge, ressenti, technique..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>2–3 min</b></span><button class="psr-btn" onclick="startRest(150,event)">▶ 2:30</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Pause bench (1s en bas)</span><span class="variant-chip">DB Bench si barre indispo</span></div>
+      <button class="done-btn" id="done-push-0" onclick="markDone('push',0,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- PUSH EX 1: Développé incliné haltères -->
+  <div class="ex-card push" id="push-ex-1" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="6" y="26" width="36" height="4" rx="2" fill="#2a2a2a" transform="rotate(-20 6 26)"/><rect x="8" y="14" width="10" height="4" rx="2" fill="#555"/><circle cx="8" cy="16" r="3.5" fill="var(--push)"/><circle cx="18" cy="16" r="3.5" fill="var(--push)"/><rect x="32" y="14" width="10" height="4" rx="2" fill="#555"/><circle cx="32" cy="16" r="3.5" fill="var(--push)"/><circle cx="42" cy="16" r="3.5" fill="var(--push)"/><circle cx="18" cy="22" r="4" fill="#666"/><line x1="20" y1="25" x2="12" y2="17" stroke="#555" stroke-width="3" stroke-linecap="round"/><line x1="30" y1="26" x2="38" y2="18" stroke="#555" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Développé Incliné Haltères</div>
+        <div class="ex-cue">30–45°, étirement complet en bas, contraction 1s en haut</div>
+        <div class="ex-muscles">🎯 Chef claviculaire (pec haut), deltoïde ant., triceps</div>
+        <div class="ex-tags"><span class="ex-tag tag-db">Haltères</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-push-1">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×8–10</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="warmup-set-row"><span class="ws-label">🔆 Échauff.</span><span>1×12 haltères légers — valider étirement en bas</span></div>
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="push-pr-1">—</b><span class="it-pr-suggestion" id="push-sug-1"></span></div></div>
+        <div id="push-sets-1"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="push-note-1" placeholder="Charge par haltère, étirement..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>90s</b></span><button class="psr-btn" onclick="startRest(90,event)">▶ 90s</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Incline barre</span><span class="variant-chip">Incline Machine</span><span class="variant-chip">Prise neutre marteau</span></div>
+      <button class="done-btn" id="done-push-1" onclick="markDone('push',1,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- PUSH EX 2: Dips -->
+  <div class="ex-card push" id="push-ex-2" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="4" y="10" width="8" height="28" rx="3" fill="#333"/><rect x="40" y="10" width="8" height="28" rx="3" fill="#333"/><rect x="4" y="10" width="10" height="4" rx="2" fill="#555"/><rect x="38" y="10" width="10" height="4" rx="2" fill="#555"/><circle cx="26" cy="20" r="5" fill="#666"/><rect x="23" y="25" width="6" height="12" rx="3" fill="#444"/><line x1="22" y1="28" x2="10" y2="22" stroke="var(--push)" stroke-width="3.5" stroke-linecap="round"/><line x1="30" y1="28" x2="42" y2="22" stroke="var(--push)" stroke-width="3.5" stroke-linecap="round"/><line x1="24" y1="37" x2="20" y2="48" stroke="#555" stroke-width="3" stroke-linecap="round"/><line x1="28" y1="37" x2="32" y2="48" stroke="#555" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Dips (lestés si possible)</div>
+        <div class="ex-cue">Corps légèrement incliné avant, descente 3s, 0 verrouillage</div>
+        <div class="ex-muscles">🎯 Grand pectoral (bas), triceps (long faisceau), deltoïde ant.</div>
+        <div class="ex-tags"><span class="ex-tag tag-bw">Poids corps + lest</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-push-2">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×8–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="warmup-set-row"><span class="ws-label">🔆 Échauff.</span><span>1×8 sans lest — contrôle de la descente</span></div>
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="push-pr-2">—</b><span class="it-pr-suggestion" id="push-sug-2"></span></div></div>
+        <div id="push-sets-2"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="push-note-2" placeholder="Lest utilisé, reps..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>90s</b></span><button class="psr-btn" onclick="startRest(90,event)">▶ 90s</button></div>
+      <div class="variants-label">Variantes / Progressions</div>
+      <div class="variant-chips"><span class="variant-chip">Ceinture de lest</span><span class="variant-chip">Machine dips assistée (régression)</span><span class="variant-chip">Bench dips (plus facile)</span></div>
+      <button class="done-btn" id="done-push-2" onclick="markDone('push',2,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <div class="section-label">Isolation — Épaules & Triceps</div>
+
+  <!-- PUSH EX 3: Élévations latérales -->
+  <div class="ex-card push" id="push-ex-3" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="14" r="4.5" fill="#555"/><rect x="21" y="18" width="6" height="14" rx="3" fill="#3a3a3a"/><line x1="23" y1="32" x2="20" y2="42" stroke="#3a3a3a" stroke-width="2.5" stroke-linecap="round"/><line x1="25" y1="32" x2="28" y2="42" stroke="#3a3a3a" stroke-width="2.5" stroke-linecap="round"/><line x1="21" y1="24" x2="6" y2="20" stroke="#555" stroke-width="3" stroke-linecap="round"/><line x1="27" y1="24" x2="42" y2="20" stroke="#555" stroke-width="3" stroke-linecap="round"/><rect x="2" y="17" width="7" height="4" rx="2" fill="var(--push)"/><rect x="39" y="17" width="7" height="4" rx="2" fill="var(--push)"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Élévations Latérales</div>
+        <div class="ex-cue">0 élan, contraction au sommet 1s — forme > charge absolument</div>
+        <div class="ex-muscles">🎯 Deltoïde médian (chef latéral), sus-épineux, trapèze</div>
+        <div class="ex-tags"><span class="ex-tag tag-db">Haltères</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-push-3">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×12–15</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="push-pr-3">—</b><span class="it-pr-suggestion" id="push-sug-3"></span></div></div>
+        <div id="push-sets-3"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="push-note-3" placeholder="Charge légère, contraction..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>60s</b></span><button class="psr-btn" onclick="startRest(60,event)">▶ 60s</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Câble latéral</span><span class="variant-chip">Machine latérale</span><span class="variant-chip">Drop set</span></div>
+      <button class="done-btn" id="done-push-3" onclick="markDone('push',3,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- PUSH EX 4: Extension triceps poulie -->
+  <div class="ex-card push" id="push-ex-4" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="6" r="3.5" fill="#333" stroke="var(--push)" stroke-width="1.5"/><line x1="24" y1="10" x2="24" y2="18" stroke="var(--push)" stroke-width="2" stroke-dasharray="3 2"/><rect x="16" y="18" width="16" height="3" rx="1.5" fill="#555"/><line x1="22" y1="18" x2="18" y2="36" stroke="#555" stroke-width="3" stroke-linecap="round"/><line x1="26" y1="18" x2="30" y2="36" stroke="#555" stroke-width="3" stroke-linecap="round"/><rect x="15" y="36" width="5" height="3" rx="1.5" fill="var(--push)"/><rect x="28" y="36" width="5" height="3" rx="1.5" fill="var(--push)"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Extension Triceps Poulie</div>
+        <div class="ex-cue">Corde ou barre, coudes collés, extension complète, retour lent 2s</div>
+        <div class="ex-muscles">🎯 Triceps (3 chefs), anconé</div>
+        <div class="ex-tags"><span class="ex-tag tag-cable">Câble</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-push-4">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×10–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="push-pr-4">—</b><span class="it-pr-suggestion" id="push-sug-4"></span></div></div>
+        <div id="push-sets-4"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="push-note-4" placeholder="Charge, retour lent 2s..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>60s</b></span><button class="psr-btn" onclick="startRest(60,event)">▶ 60s</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Skull Crushers EZ</span><span class="variant-chip">Overhead extension (chef long)</span></div>
+      <button class="done-btn" id="done-push-4" onclick="markDone('push',4,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+  <div class="section-label" style="color:var(--abs)">⚡ ABDOS — 10 min</div><div class="ex-card abs" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><circle cx="6" cy="30" r="3.5" fill="#333" stroke="var(--abs)" stroke-width="1.5"/><line x1="10" y1="30" x2="24" y2="30" stroke="var(--abs)" stroke-width="2" stroke-dasharray="3 2"/><circle cx="34" cy="20" r="4.5" fill="#555"/><rect x="31" y="24" width="6" height="14" rx="3" fill="#3a3a3a"/><line x1="34" y1="28" x2="20" y2="28" stroke="#555" stroke-width="4" stroke-linecap="round"/></svg></div>
+      <div class="ex-info"><div class="ex-name">Cable Crunch</div><div class="ex-cue">Corde haute, flexion du rachis, mains fixes à la tête</div><div class="ex-muscles">🎯 Grand droit, obliques — surcharge progressive</div><div class="ex-tags"><span class="ex-tag tag-cable">Câble</span></div></div>
+      <div class="ex-right"><div class="sets-num">3×15</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="muscles-detail"><strong>Surcharge progressive</strong>+2.5 kg dès que tu atteins 15 reps propres sur toutes les séries. C'est le seul exercice abdo vraiment progressif.</div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>45s</b></span><button class="psr-btn" onclick="startRest(45,event)">▶ 45s</button></div>
+    </div>
+  </div>
+  <div class="ex-card abs" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="14" r="4.5" fill="#555"/><line x1="22" y1="18" x2="10" y2="38" stroke="#3a3a3a" stroke-width="4.5" stroke-linecap="round"/><line x1="26" y1="18" x2="38" y2="38" stroke="#3a3a3a" stroke-width="4.5" stroke-linecap="round"/><rect x="4" y="36" width="40" height="4" rx="2" fill="#555"/></svg></div>
+      <div class="ex-info"><div class="ex-name">Leg Raises Suspendu</div><div class="ex-cue">Jambes tendues ou genoux, contrôle total, 0 élan</div><div class="ex-muscles">🎯 Bas du grand droit, psoas, fléchisseurs</div><div class="ex-tags"><span class="ex-tag tag-bw">Barre traction</span></div></div>
+      <div class="ex-right"><div class="sets-num">3×12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="muscles-detail"><strong>Progression</strong>Genoux fléchis → jambes tendues → lest cheville → L-sit</div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>45s</b></span><button class="psr-btn" onclick="startRest(45,event)">▶ 45s</button></div>
+    </div>
+  </div>
+  <div class="ex-card abs" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><rect x="6" y="30" width="36" height="4" rx="2" fill="#3a3a3a"/><circle cx="38" cy="26" r="4" fill="#555"/><line x1="8" y1="30" x2="8" y2="34" stroke="#555" stroke-width="3" stroke-linecap="round"/><rect x="4" y="34" width="6" height="8" rx="2" fill="var(--abs)" opacity=".4"/></svg></div>
+      <div class="ex-info"><div class="ex-name">Planche + Side Plank</div><div class="ex-cue">Standard → Side G/D → Toucher épaules</div><div class="ex-muscles">🎯 Transverse, rectus, obliques, fessiers</div><div class="ex-tags"><span class="ex-tag tag-bw">Poids corps</span></div></div>
+      <div class="ex-right"><div class="sets-num">2×40s</div><div class="sets-label">durée</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-timer-wrap" onclick="event.stopPropagation()">
+        <div class="inline-timer-label">⏱ MINUTEUR PLANCHE</div>
+        <div class="inline-presets"><button class="ipreset" onclick="setIT(5,30)">30s</button><button class="ipreset isel" onclick="setIT(5,40)">40s</button><button class="ipreset" onclick="setIT(5,60)">60s</button></div>
+        <div class="inline-timer-main"><svg class="inline-arc" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="none" stroke="var(--border2)" stroke-width="3"/><circle id="ia-5" cx="20" cy="20" r="17" fill="none" stroke="var(--abs)" stroke-width="3" stroke-linecap="round" stroke-dasharray="107" stroke-dashoffset="0" transform="rotate(-90 20 20)" style="transition:stroke-dashoffset 1s linear"/></svg><div class="inline-display" id="id-5">40s</div></div>
+        <div class="itimer-btns"><button class="itbtn start" id="ib-5" onclick="toggleIT(5)">▶ START</button><button class="itbtn reset-t" onclick="resetIT(5)">↺ RESET</button></div>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>30s</b></span><button class="psr-btn" onclick="startRest(30,event)">▶ 30s</button></div>
+    </div>
+  </div>
+    <div class="synth-card" style="border-color:rgba(96,165,250,0.3);background:linear-gradient(135deg,rgba(96,165,250,0.04),transparent)">
+    <div class="synth-header">
+      <span class="synth-title" style="color:var(--cool)">❄️ RÉCUPÉRATION</span>
+      <span class="synth-time">7 min · Étirements statiques</span>
+    </div>
+    <div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Chest Stretch (bras contre mur) — 30s/côté</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Triceps Stretch — 30s/côté</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Shoulder cross stretch — 30s/côté</span></div>
+  </div>
+  <div class="end-session-wrap"><button class="end-session-btn push-end" onclick="endSession('push')">🏁 TERMINER LA SÉANCE PUSH</button></div>
+</div>
+</div>
+</div>
+
+<!-- ===== PULL ===== -->
+<div class="page pull" id="page-pull">
+  <div class="day-intro pull">
+    <div class="day-title">PULL DAY</div>
+    <div class="day-muscles">Dos · Biceps · Trapèzes · Deltoïde post.</div>
+    <div class="day-meta"><div class="meta-pill day-pull">📅 MARDI</div><div class="meta-pill">⏱ <b>~70 min</b></div><div class="meta-pill" style="border-color:rgba(192,132,252,.4);color:var(--abs)">🔥 Abdos</div><div class="meta-pill" style="border-color:rgba(96,165,250,.4);color:var(--cool)">🚶 Cardio</div></div>
+  </div>
+      <div class="synth-card" style="border-color:rgba(251,146,60,0.3); background:linear-gradient(135deg,rgba(251,146,60,0.04),transparent)">
+    <div class="synth-header">
+      <span class="synth-title" style="color:var(--warm)">🔥 ÉCHAUFFEMENT</span>
+      <span class="synth-time">8 min · Sans repos</span>
+    </div>
+    <div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Child's Pose → Cobra flow — 8 cycles</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Scapular pull-ups (sans lest) — 2×10 reps</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Band pull-apart ou face pull léger — 2×15 reps</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Dead hang + rotation épaule — 30s</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Corde à sauter — 90s</span></div>
+    <div class="synth-tip">Mobilité dorsaux → Activation scapulaire → Cardio léger</div>
+  </div>
+      <div class="session-progress pull" id="progress-pull">
+    <div class="sp-top"><div class="sp-label">Progression séance</div><div class="sp-count" id="progress-pull-text" style="color:var(--pull)">0 / 5</div></div>
+    <div class="sp-bar-bg"><div class="sp-bar-fill" id="progress-pull-bar" style="width:0%;background:var(--pull)"></div></div>
+  </div>
+  <div class="section-label">Composés — Force</div>
+
+  <!-- PULL EX 0: Tractions lestées -->
+  <div class="ex-card pull" id="pull-ex-0" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="8" y="4" width="36" height="4" rx="2" fill="#555"/><rect x="6" y="3" width="3" height="16" rx="1.5" fill="#333"/><rect x="43" y="3" width="3" height="16" rx="1.5" fill="#333"/><line x1="18" y1="8" x2="18" y2="20" stroke="#555" stroke-width="3" stroke-linecap="round"/><line x1="34" y1="8" x2="34" y2="20" stroke="#555" stroke-width="3" stroke-linecap="round"/><circle cx="26" cy="24" r="5" fill="#666"/><rect x="23" y="29" width="6" height="12" rx="3" fill="#444"/><line x1="24" y1="41" x2="20" y2="50" stroke="#555" stroke-width="3" stroke-linecap="round"/><line x1="28" y1="41" x2="32" y2="50" stroke="#555" stroke-width="3" stroke-linecap="round"/><circle cx="26" cy="44" r="3.5" fill="var(--pull)" opacity=".7"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Tractions Lestées</div>
+        <div class="ex-cue">Prise large pronation, amplitude complète, lest obligatoire si >10 reps</div>
+        <div class="ex-muscles">🎯 Grand dorsal, teres major, biceps, rhomboïdes</div>
+        <div class="ex-tags"><span class="ex-tag tag-bw">Poids corps + lest</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-pull-0">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">4×6–8</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="warmup-set-row"><span class="ws-label">🔆 Échauff.</span><span>1×5 sans lest — valider amplitude, engagement dorsal</span></div>
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="pull-pr-0">—</b><span class="it-pr-suggestion" id="pull-sug-0"></span></div></div>
+        <div id="pull-sets-0"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="pull-note-0" placeholder="Lest utilisé, reps, sensation dos..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos entre séries : <b>2–3 min</b></span><button class="psr-btn" onclick="startRest(150,event)">▶ 2:30</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Chin-up (supination)</span><span class="variant-chip">Neutral grip</span><span class="variant-chip">Archer pull-up</span></div>
+      <button class="done-btn" id="done-pull-0" onclick="markDone('pull',0,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- PULL EX 1: Rowing barre -->
+  <div class="ex-card pull" id="pull-ex-1" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="2" y="36" width="48" height="4" rx="2" fill="#555"/><rect x="0" y="32" width="6" height="11" rx="2" fill="var(--pull)"/><rect x="46" y="32" width="6" height="11" rx="2" fill="var(--pull)"/><circle cx="26" cy="12" r="4.5" fill="#666"/><line x1="26" y1="17" x2="24" y2="36" stroke="#444" stroke-width="5" stroke-linecap="round" transform="rotate(-12 24 26)"/><line x1="22" y1="28" x2="10" y2="36" stroke="var(--pull)" stroke-width="3.5" stroke-linecap="round"/><line x1="28" y1="28" x2="40" y2="36" stroke="var(--pull)" stroke-width="3.5" stroke-linecap="round"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Rowing Barre</div>
+        <div class="ex-cue">Torse 45°, tirer vers le nombril, omoplates serrées en fin</div>
+        <div class="ex-muscles">🎯 Grand dorsal, trapèze, rhomboïdes, biceps</div>
+        <div class="ex-tags"><span class="ex-tag tag-bar">Barre</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-pull-1">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×8–10</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="warmup-set-row"><span class="ws-label">🔆 Échauff.</span><span>1×12 à 50% — dos plat à 45°, sans balancement</span></div>
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="pull-pr-1">—</b><span class="it-pr-suggestion" id="pull-sug-1"></span></div></div>
+        <div id="pull-sets-1"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="pull-note-1" placeholder="Charge, dos plat, tirage..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>2 min</b></span><button class="psr-btn" onclick="startRest(120,event)">▶ 2 min</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Pendlay Row</span><span class="variant-chip">T-Bar Row</span><span class="variant-chip">DB Row unilatéral</span></div>
+      <button class="done-btn" id="done-pull-1" onclick="markDone('pull',1,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- PULL EX 2: Tirage horizontal machine -->
+  <div class="ex-card pull" id="pull-ex-2" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="2" y="18" width="9" height="22" rx="3" fill="#1a1a1a" stroke="#333" stroke-width="1.5"/><circle cx="6" cy="28" r="3" fill="#333" stroke="var(--pull)" stroke-width="1.5"/><line x1="9" y1="28" x2="24" y2="28" stroke="var(--pull)" stroke-width="2" stroke-dasharray="3 2"/><circle cx="36" cy="20" r="4.5" fill="#666"/><rect x="33" y="24" width="6" height="14" rx="3" fill="#444"/><line x1="33" y1="28" x2="20" y2="28" stroke="#555" stroke-width="3.5" stroke-linecap="round"/><line x1="36" y1="38" x2="30" y2="46" stroke="#555" stroke-width="3" stroke-linecap="round"/><line x1="38" y1="38" x2="44" y2="46" stroke="#555" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Tirage Horizontal Machine</div>
+        <div class="ex-cue">Dos droit, coudes vers l'arrière, omoplates serrées en fin de course</div>
+        <div class="ex-muscles">🎯 Rhomboïdes, trapèze moyen, grand dorsal, deltoïde post.</div>
+        <div class="ex-tags"><span class="ex-tag tag-machine">Machine</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-pull-2">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×10–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="pull-pr-2">—</b><span class="it-pr-suggestion" id="pull-sug-2"></span></div></div>
+        <div id="pull-sets-2"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="pull-note-2" placeholder="Charge, contraction finale..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>90s</b></span><button class="psr-btn" onclick="startRest(90,event)">▶ 90s</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Cable Seated Row (prise étroite)</span><span class="variant-chip">High row (dos haut)</span><span class="variant-chip">Prise large (dos large)</span></div>
+      <button class="done-btn" id="done-pull-2" onclick="markDone('pull',2,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <div class="section-label">Épaule arrière & Biceps</div>
+
+  <!-- PULL EX 3: Face Pull -->
+  <div class="ex-card pull" id="pull-ex-3" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><circle cx="6" cy="22" r="3.5" fill="#333" stroke="var(--pull)" stroke-width="1.5"/><line x1="10" y1="22" x2="24" y2="22" stroke="var(--pull)" stroke-width="2" stroke-dasharray="3 2"/><circle cx="34" cy="14" r="4.5" fill="#555"/><rect x="31" y="18" width="6" height="14" rx="3" fill="#3a3a3a"/><line x1="31" y1="22" x2="20" y2="20" stroke="#555" stroke-width="3" stroke-linecap="round"/><line x1="33" y1="22" x2="22" y2="20" stroke="#555" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Face Pull (câble corde)</div>
+        <div class="ex-cue">Poulie haute, tirer vers le visage, rotation externe finale max</div>
+        <div class="ex-muscles">🎯 Deltoïde post., infra-épineux, teres minor, trapèze moyen</div>
+        <div class="ex-tags"><span class="ex-tag tag-cable">Câble</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-pull-3">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×12–15</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="pull-pr-3">—</b><span class="it-pr-suggestion" id="pull-sug-3"></span></div></div>
+        <div id="pull-sets-3"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="pull-note-3" placeholder="Charge légère, rotation externe finale..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>60s</b></span><button class="psr-btn" onclick="startRest(60,event)">▶ 60s</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Band pull-apart</span><span class="variant-chip">Rear delt fly machine</span><span class="variant-chip">Prone Y raise</span></div>
+      <button class="done-btn" id="done-pull-3" onclick="markDone('pull',3,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- PULL EX 4: Curl Biceps -->
+  <div class="ex-card pull" id="pull-ex-4" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><circle cx="26" cy="12" r="4.5" fill="#666"/><rect x="23" y="16" width="6" height="14" rx="3" fill="#444"/><line x1="24" y1="30" x2="20" y2="42" stroke="#555" stroke-width="2.5" stroke-linecap="round"/><line x1="28" y1="30" x2="32" y2="42" stroke="#555" stroke-width="2.5" stroke-linecap="round"/><path d="M8 34 Q14 28 20 30" stroke="var(--pull)" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M30 30 Q36 28 42 34" stroke="var(--pull)" stroke-width="3.5" fill="none" stroke-linecap="round"/><rect x="4" y="30" width="8" height="11" rx="3" fill="var(--pull)" opacity=".6"/><rect x="40" y="30" width="8" height="11" rx="3" fill="var(--pull)" opacity=".6"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Curl Biceps</div>
+        <div class="ex-cue">Barre EZ ou haltères, coudes fixes, supination complète, descente 3s</div>
+        <div class="ex-muscles">🎯 Biceps brachial (long/court), brachial, brachio-radial</div>
+        <div class="ex-tags"><span class="ex-tag tag-bar">Barre EZ</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-pull-4">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×10–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="pull-pr-4">—</b><span class="it-pr-suggestion" id="pull-sug-4"></span></div></div>
+        <div id="pull-sets-4"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="pull-note-4" placeholder="Charge, descente lente 3s..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>60s</b></span><button class="psr-btn" onclick="startRest(60,event)">▶ 60s</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Spider curl (banc incliné)</span><span class="variant-chip">Cable curl (tension constante)</span><span class="variant-chip">Hammer curl (brachio-radial)</span></div>
+      <button class="done-btn" id="done-pull-4" onclick="markDone('pull',4,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+  
+    
+  <div class="section-label" style="color:var(--abs)">⚡ ABDOS — 10 min</div><div class="ex-card abs" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><circle cx="6" cy="30" r="3.5" fill="#333" stroke="var(--abs)" stroke-width="1.5"/><line x1="10" y1="30" x2="24" y2="30" stroke="var(--abs)" stroke-width="2" stroke-dasharray="3 2"/><circle cx="34" cy="20" r="4.5" fill="#555"/><rect x="31" y="24" width="6" height="14" rx="3" fill="#3a3a3a"/><line x1="34" y1="28" x2="20" y2="28" stroke="#555" stroke-width="4" stroke-linecap="round"/></svg></div>
+      <div class="ex-info"><div class="ex-name">Cable Crunch</div><div class="ex-cue">Corde haute, flexion du rachis, mains fixes à la tête</div><div class="ex-muscles">🎯 Grand droit, obliques — surcharge progressive</div><div class="ex-tags"><span class="ex-tag tag-cable">Câble</span></div></div>
+      <div class="ex-right"><div class="sets-num">3×15</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="muscles-detail"><strong>Surcharge progressive</strong>+2.5 kg dès que tu atteins 15 reps propres sur toutes les séries. C'est le seul exercice abdo vraiment progressif.</div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>45s</b></span><button class="psr-btn" onclick="startRest(45,event)">▶ 45s</button></div>
+    </div>
+  </div>
+  <div class="ex-card abs" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="14" r="4.5" fill="#555"/><line x1="22" y1="18" x2="10" y2="38" stroke="#3a3a3a" stroke-width="4.5" stroke-linecap="round"/><line x1="26" y1="18" x2="38" y2="38" stroke="#3a3a3a" stroke-width="4.5" stroke-linecap="round"/><rect x="4" y="36" width="40" height="4" rx="2" fill="#555"/></svg></div>
+      <div class="ex-info"><div class="ex-name">Leg Raises Suspendu</div><div class="ex-cue">Jambes tendues ou genoux, contrôle total, 0 élan</div><div class="ex-muscles">🎯 Bas du grand droit, psoas, fléchisseurs</div><div class="ex-tags"><span class="ex-tag tag-bw">Barre traction</span></div></div>
+      <div class="ex-right"><div class="sets-num">3×12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="muscles-detail"><strong>Progression</strong>Genoux fléchis → jambes tendues → lest cheville → L-sit</div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>45s</b></span><button class="psr-btn" onclick="startRest(45,event)">▶ 45s</button></div>
+    </div>
+  </div>
+  <div class="ex-card abs" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><rect x="6" y="30" width="36" height="4" rx="2" fill="#3a3a3a"/><circle cx="38" cy="26" r="4" fill="#555"/><line x1="8" y1="30" x2="8" y2="34" stroke="#555" stroke-width="3" stroke-linecap="round"/><rect x="4" y="34" width="6" height="8" rx="2" fill="var(--abs)" opacity=".4"/></svg></div>
+      <div class="ex-info"><div class="ex-name">Planche + Side Plank</div><div class="ex-cue">Standard → Side G/D → Toucher épaules</div><div class="ex-muscles">🎯 Transverse, rectus, obliques, fessiers</div><div class="ex-tags"><span class="ex-tag tag-bw">Poids corps</span></div></div>
+      <div class="ex-right"><div class="sets-num">2×40s</div><div class="sets-label">durée</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-timer-wrap" onclick="event.stopPropagation()">
+        <div class="inline-timer-label">⏱ MINUTEUR PLANCHE</div>
+        <div class="inline-presets"><button class="ipreset" onclick="setIT(5,30)">30s</button><button class="ipreset isel" onclick="setIT(5,40)">40s</button><button class="ipreset" onclick="setIT(5,60)">60s</button></div>
+        <div class="inline-timer-main"><svg class="inline-arc" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="none" stroke="var(--border2)" stroke-width="3"/><circle id="ia-5" cx="20" cy="20" r="17" fill="none" stroke="var(--abs)" stroke-width="3" stroke-linecap="round" stroke-dasharray="107" stroke-dashoffset="0" transform="rotate(-90 20 20)" style="transition:stroke-dashoffset 1s linear"/></svg><div class="inline-display" id="id-5">40s</div></div>
+        <div class="itimer-btns"><button class="itbtn start" id="ib-5" onclick="toggleIT(5)">▶ START</button><button class="itbtn reset-t" onclick="resetIT(5)">↺ RESET</button></div>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>30s</b></span><button class="psr-btn" onclick="startRest(30,event)">▶ 30s</button></div>
+    </div>
+  </div>
+    
+  <div class="section-label" style="color:var(--cool)">🚶 CARDIO — Après séance</div>
+  <div style="background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.25);border-radius:14px;padding:14px 16px;margin-top:4px;font-size:13px;color:var(--muted2)">
+    <div style="color:var(--cool);font-weight:700;letter-spacing:1px;font-family:'Rajdhani',sans-serif;font-size:15px;margin-bottom:8px">🚶 CARDIO — Après la séance</div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>Exercice</span><span style="color:var(--text);font-weight:600">Marche inclinée</span></div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>Durée</span><span style="color:var(--text);font-weight:600">15–20 min</span></div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>Inclinaison</span><span style="color:var(--text);font-weight:600">8–12 %</span></div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0"><span>Vitesse</span><span style="color:var(--text);font-weight:600">4–5 km/h</span></div>
+  </div>
+    <div class="synth-card" style="border-color:rgba(96,165,250,0.3);background:linear-gradient(135deg,rgba(96,165,250,0.04),transparent)">
+    <div class="synth-header">
+      <span class="synth-title" style="color:var(--cool)">❄️ RÉCUPÉRATION</span>
+      <span class="synth-time">7 min · Étirements statiques</span>
+    </div>
+    <div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Child's Pose (dorsaux) — 45s</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Biceps wall stretch — 30s/côté</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Neck + trap release — 30s/côté</span></div>
+  </div>
+  <div class="end-session-wrap"><button class="end-session-btn pull-end" onclick="endSession('pull')">🏁 TERMINER LA SÉANCE PULL</button></div>
+</div>
+</div>
+
+<!-- ===== LEGS ===== -->
+<div class="page legs" id="page-legs">
+  <div class="day-intro legs">
+    <div class="day-title">LEGS DAY</div>
+    <div class="day-muscles">Quadriceps · Fessiers · Ischio · Mollets</div>
+    <div class="day-meta"><div class="meta-pill day-legs">📅 JEUDI</div><div class="meta-pill">⏱ <b>~75 min</b></div><div class="meta-pill" style="border-color:rgba(248,113,113,.4);color:var(--red)">❌ Pas d'abdos</div><div class="meta-pill" style="border-color:rgba(96,165,250,.4);color:var(--cool)">🚶 Cardio</div></div>
+  </div>
+      <div class="synth-card" style="border-color:rgba(251,146,60,0.3); background:linear-gradient(135deg,rgba(251,146,60,0.04),transparent)">
+    <div class="synth-header">
+      <span class="synth-title" style="color:var(--warm)">🔥 ÉCHAUFFEMENT</span>
+      <span class="synth-time">8 min · Sans repos</span>
+    </div>
+    <div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Hip circles + Fente dynamique — 10 reps/côté</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Leg swings avant/arrière + latéral — 10 reps</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Glute Bridge activation — 2×15 reps</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Bodyweight Squat lent (descente 4s) — 2×12</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--warm)"></span><span>Inchworm → Deep Squat — 8 reps</span></div>
+    <div class="synth-tip">Mobilité hanches → Activation fessiers → Schéma moteur squat</div>
+  </div>
+    <div class="session-progress legs" id="progress-legs">
+    <div class="sp-top"><div class="sp-label">Progression séance</div><div class="sp-count" id="progress-legs-text" style="color:var(--legs)">0 / 6</div></div>
+    <div class="sp-bar-bg"><div class="sp-bar-fill" id="progress-legs-bar" style="width:0%;background:var(--legs)"></div></div>
+  </div>
+  <div class="section-label">Composés — Force</div>
+
+  <!-- LEGS EX 0: Squat barre 4×6 -->
+  <div class="ex-card legs" id="legs-ex-0" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="3" y="3" width="4" height="28" rx="2" fill="#222"/><rect x="45" y="3" width="4" height="28" rx="2" fill="#222"/><rect x="5" y="14" width="42" height="4" rx="2" fill="#555"/><rect x="3" y="11" width="5" height="10" rx="2" fill="var(--legs)"/><rect x="44" y="11" width="5" height="10" rx="2" fill="var(--legs)"/><circle cx="26" cy="12" r="4" fill="#666"/><line x1="26" y1="16" x2="26" y2="28" stroke="#444" stroke-width="5.5" stroke-linecap="round"/><line x1="24" y1="28" x2="15" y2="40" stroke="var(--legs)" stroke-width="4.5" stroke-linecap="round"/><line x1="28" y1="28" x2="37" y2="40" stroke="var(--legs)" stroke-width="4.5" stroke-linecap="round"/><line x1="15" y1="40" x2="12" y2="50" stroke="#555" stroke-width="4" stroke-linecap="round"/><line x1="37" y1="40" x2="40" y2="50" stroke="#555" stroke-width="4" stroke-linecap="round"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Squat Barre</div>
+        <div class="ex-cue">Descente parallèle ou plus, dos droit, respiration ventrale</div>
+        <div class="ex-muscles">🎯 Quadriceps, fessiers, ischio, core, adducteurs</div>
+        <div class="ex-tags"><span class="ex-tag tag-bar">Barre</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-legs-0">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">4×6</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="warmup-set-row"><span class="ws-label">🔆 Échauff.</span><span>2×10 barre vide → 1×6 à 50% → 1×4 à 75%</span></div>
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="legs-pr-0">—</b><span class="it-pr-suggestion" id="legs-sug-0"></span></div></div>
+        <div id="legs-sets-0"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="legs-note-0" placeholder="Charge, profondeur, ressenti genoux..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos entre séries : <b>3 min</b></span><button class="psr-btn" onclick="startRest(180,event)">▶ 3 min</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Pause Squat 2s</span><span class="variant-chip">Box Squat</span><span class="variant-chip">Front Squat</span></div>
+      <button class="done-btn" id="done-legs-0" onclick="markDone('legs',0,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- LEGS EX 1: Presse 45° 3×10 -->
+  <div class="ex-card legs" id="legs-ex-1" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="3" y="26" width="34" height="18" rx="3" fill="#1a1a1a" stroke="#333" stroke-width="1.5"/><path d="M6 26 L34 8" stroke="#333" stroke-width="3" stroke-linecap="round"/><rect x="26" y="4" width="13" height="7" rx="2" fill="#2a2a2a"/><rect x="24" y="2" width="5" height="11" rx="2" fill="var(--legs)"/><rect x="34" y="2" width="5" height="11" rx="2" fill="var(--legs)"/><circle cx="9" cy="22" r="4" fill="#666"/><line x1="12" y1="22" x2="26" y2="9" stroke="var(--legs)" stroke-width="4.5" stroke-linecap="round"/><line x1="9" y1="26" x2="20" y2="36" stroke="#555" stroke-width="3.5" stroke-linecap="round"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Presse 45°</div>
+        <div class="ex-cue">Pieds épaule, amplitude complète, ne pas verrouiller en haut</div>
+        <div class="ex-muscles">🎯 Quadriceps, fessiers, ischio (selon position pieds)</div>
+        <div class="ex-tags"><span class="ex-tag tag-machine">Machine</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-legs-1">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×10</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="legs-pr-1">—</b><span class="it-pr-suggestion" id="legs-sug-1"></span></div></div>
+        <div id="legs-sets-1"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="legs-note-1" placeholder="Charge, position pieds..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>2 min</b></span><button class="psr-btn" onclick="startRest(120,event)">▶ 2 min</button></div>
+      <div class="variants-label">Pieds hauts = plus fessiers · Pieds bas = plus quads</div>
+      <button class="done-btn" id="done-legs-1" onclick="markDone('legs',1,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- LEGS EX 2: Hip Thrust 3×10-12 -->
+  <div class="ex-card legs" id="legs-ex-2" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="6" y="26" width="18" height="5" rx="2" fill="#2a2a2a"/><circle cx="14" cy="22" r="4" fill="#666"/><line x1="14" y1="26" x2="14" y2="30" stroke="#444" stroke-width="4" stroke-linecap="round"/><line x1="14" y1="30" x2="30" y2="26" stroke="#444" stroke-width="5" stroke-linecap="round"/><line x1="30" y1="26" x2="40" y2="38" stroke="#555" stroke-width="4" stroke-linecap="round"/><rect x="22" y="22" width="18" height="4" rx="2" fill="#555"/><rect x="20" y="19" width="5" height="9" rx="2" fill="var(--legs)"/><rect x="34" y="19" width="5" height="9" rx="2" fill="var(--legs)"/><ellipse cx="30" cy="26" rx="7" ry="5" fill="var(--legs)" opacity=".15"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Hip Thrust Barre</div>
+        <div class="ex-cue">Dos sur banc, barre sur hanches, contraction fessiers max en haut</div>
+        <div class="ex-muscles">🎯 Grand fessier, ischio, core stabilisateur</div>
+        <div class="ex-tags"><span class="ex-tag tag-bar">Barre</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-legs-2">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×10–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="legs-pr-2">—</b><span class="it-pr-suggestion" id="legs-sug-2"></span></div></div>
+        <div id="legs-sets-2"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="legs-note-2" placeholder="Charge, contraction en haut..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>90s</b></span><button class="psr-btn" onclick="startRest(90,event)">▶ 90s</button></div>
+      <button class="done-btn" id="done-legs-2" onclick="markDone('legs',2,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- LEGS EX 3: Bulgarian Split Squat 2×10/jambe -->
+  <div class="ex-card legs" id="legs-ex-3" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="30" y="30" width="18" height="5" rx="2" fill="#2a2a2a"/><circle cx="20" cy="12" r="4.5" fill="#666"/><line x1="20" y1="16" x2="20" y2="30" stroke="#444" stroke-width="5" stroke-linecap="round"/><line x1="18" y1="30" x2="12" y2="46" stroke="var(--legs)" stroke-width="4.5" stroke-linecap="round"/><line x1="20" y1="30" x2="32" y2="30" stroke="#555" stroke-width="4" stroke-linecap="round"/><rect x="11" y="26" width="4" height="10" rx="2" fill="var(--legs)"/><rect x="26" y="26" width="4" height="10" rx="2" fill="var(--legs)"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Bulgarian Split Squat</div>
+        <div class="ex-cue">Pied arrière surélevé, descente verticale, 0 compensation</div>
+        <div class="ex-muscles">🎯 Quad, fessier, ischio, core, équilibre</div>
+        <div class="ex-tags"><span class="ex-tag tag-db">Haltères</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-legs-3">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">2×10</div><div class="sets-label">/ jambe</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="legs-pr-3">—</b><span class="it-pr-suggestion" id="legs-sug-3"></span></div></div>
+        <div id="legs-sets-3"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="legs-note-3" placeholder="Poids par haltère, ressenti..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>90s</b></span><button class="psr-btn" onclick="startRest(90,event)">▶ 90s</button></div>
+      <div class="variants-label">Progressions</div>
+      <div class="variant-chips"><span class="variant-chip">Barre (plus lourd)</span><span class="variant-chip">Pause 2s en bas</span><span class="variant-chip">Pulse reps</span></div>
+      <button class="done-btn" id="done-legs-3" onclick="markDone('legs',3,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <div class="section-label">Isolation</div>
+
+  <!-- LEGS EX 4: Leg Curl 3×10-12 -->
+  <div class="ex-card legs" id="legs-ex-4" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="3" y="18" width="36" height="14" rx="3" fill="#1a1a1a" stroke="#333" stroke-width="1.5"/><circle cx="9" cy="16" r="3.5" fill="#666"/><line x1="13" y1="18" x2="32" y2="24" stroke="#444" stroke-width="5" stroke-linecap="round"/><line x1="32" y1="24" x2="42" y2="16" stroke="var(--legs)" stroke-width="4" stroke-linecap="round"/><line x1="26" y1="24" x2="34" y2="17" stroke="var(--legs)" stroke-width="4" stroke-linecap="round"/><rect x="38" y="12" width="6" height="8" rx="2" fill="var(--legs)"/><line x1="9" y1="20" x2="6" y2="32" stroke="#555" stroke-width="3" stroke-linecap="round"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Leg Curl Machine</div>
+        <div class="ex-cue">Hanche au sol (allongé), contraction à 90°, retour lent 3s</div>
+        <div class="ex-muscles">🎯 Ischio-jambiers (biceps fémoral, semi-tendineux) — isolation</div>
+        <div class="ex-tags"><span class="ex-tag tag-machine">Machine</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-legs-4">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">3×10–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="legs-pr-4">—</b><span class="it-pr-suggestion" id="legs-sug-4"></span></div></div>
+        <div id="legs-sets-4"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="legs-note-4" placeholder="Charge, retour lent, sans rebond..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>60s</b></span><button class="psr-btn" onclick="startRest(60,event)">▶ 60s</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Seated leg curl (tension en extension)</span><span class="variant-chip">Nordic curl (ischio extrême)</span></div>
+      <button class="done-btn" id="done-legs-4" onclick="markDone('legs',4,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- LEGS EX 5: Leg Extension 2×12 -->
+  <div class="ex-card legs" id="legs-ex-5" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 52 52" fill="none"><rect x="3" y="26" width="28" height="16" rx="3" fill="#1a1a1a" stroke="#333" stroke-width="1.5"/><rect x="24" y="8" width="5" height="20" rx="3" fill="#2a2a2a"/><circle cx="18" cy="18" r="4" fill="#666"/><line x1="18" y1="22" x2="18" y2="28" stroke="#444" stroke-width="4" stroke-linecap="round"/><line x1="12" y1="28" x2="40" y2="28" stroke="#444" stroke-width="4" stroke-linecap="round"/><line x1="40" y1="28" x2="48" y2="20" stroke="var(--legs)" stroke-width="4" stroke-linecap="round"/><rect x="36" y="24" width="6" height="8" rx="2" fill="var(--legs)"/></svg></div>
+      <div class="ex-info">
+        <div class="ex-name">Leg Extension</div>
+        <div class="ex-cue">Contraction max en haut, retour lent 3s, isolation quad</div>
+        <div class="ex-muscles">🎯 Quadriceps — isolation totale des 4 chefs</div>
+        <div class="ex-tags"><span class="ex-tag tag-machine">Machine</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-legs-5">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num">2×12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="legs-pr-5">—</b><span class="it-pr-suggestion" id="legs-sug-5"></span></div></div>
+        <div id="legs-sets-5"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="legs-note-5" placeholder="Charge, contraction en haut..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>60s</b></span><button class="psr-btn" onclick="startRest(60,event)">▶ 60s</button></div>
+      <div class="variants-label">Variantes</div>
+      <div class="variant-chips"><span class="variant-chip">Unilatéral (1 jambe)</span><span class="variant-chip">Drop set</span></div>
+      <button class="done-btn" id="done-legs-5" onclick="markDone('legs',5,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+  <div class="tip legs"><strong>💡 LEGS — Squat en priorité</strong>Squat barre en priorité absolue. Pas d'abdos ce jour — économise ton énergie pour les jambes. La marche inclinée après = cardio parfait post-legs sans impacter la récupération.</div>
+        
+  <div class="section-label" style="color:var(--cool)">🚶 CARDIO — Après séance</div>
+  <div style="background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.25);border-radius:14px;padding:14px 16px;margin-top:4px;font-size:13px;color:var(--muted2)">
+    <div style="color:var(--cool);font-weight:700;letter-spacing:1px;font-family:'Rajdhani',sans-serif;font-size:15px;margin-bottom:8px">🚶 CARDIO — Après la séance</div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>Exercice</span><span style="color:var(--text);font-weight:600">Marche inclinée</span></div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>Durée</span><span style="color:var(--text);font-weight:600">15–20 min</span></div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>Inclinaison</span><span style="color:var(--text);font-weight:600">8–12 %</span></div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0"><span>Vitesse</span><span style="color:var(--text);font-weight:600">4–5 km/h</span></div>
+  </div>
+    <div class="synth-card" style="border-color:rgba(96,165,250,0.3);background:linear-gradient(135deg,rgba(96,165,250,0.04),transparent)">
+    <div class="synth-header">
+      <span class="synth-title" style="color:var(--cool)">❄️ RÉCUPÉRATION</span>
+      <span class="synth-time">7 min · Étirements statiques</span>
+    </div>
+    <div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Downward Dog (ischios) — 45s</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Quad + Hip Flexor stretch — 30s/côté</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Pigeon Pose (fessiers) — 45s/côté</span></div>
+  </div>
+  <div class="end-session-wrap"><button class="end-session-btn legs-end" onclick="endSession('legs')">🏁 TERMINER LA SÉANCE LEGS</button></div>
+</div>
+</div>
+
+<!-- ===== UPPER ===== -->
+<div class="page hiit" id="page-upper">
+  <div class="day-intro hiit">
+    <div class="day-title">UPPER BODY</div>
+    <div class="day-muscles">Pecs · Dos · Épaules · Bras</div>
+    <div class="day-meta">
+      <div class="meta-pill" style="border-color:rgba(244,114,182,.4);color:var(--hiit)">📅 VENDREDI</div>
+      <div class="meta-pill">⏱ <b>65–75 min</b></div>
+      <div class="meta-pill" style="border-color:rgba(192,132,252,.4);color:var(--abs)">🔥 +Abdos</div>
+      <div class="meta-pill" style="border-color:rgba(96,165,250,.4);color:var(--cool)">🚶 +Cardio</div>
+    </div>
+  </div>
+    <div class="synth-card" style="border-color:rgba(244,114,182,0.3); background:linear-gradient(135deg,rgba(244,114,182,0.04),transparent)">
+    <div class="synth-header">
+      <span class="synth-title" style="color:var(--hiit)">🔥 ÉCHAUFFEMENT</span>
+      <span class="synth-time">8 min · Sans repos</span>
+    </div>
+    <div class="synth-row"><span class="synth-dot" style="background:var(--hiit)"></span><span>Shoulder Circles + W-Y-T — 40s</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--hiit)"></span><span>Bras croisés + rotation externe — 40s</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--hiit)"></span><span>Push-up lents d'activation — 2×8 reps</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--hiit)"></span><span>Band pull-apart ou face pull léger — 2×12</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--hiit)"></span><span>Corde à sauter — 90s</span></div>
+    <div class="synth-tip">Mobilité épaules → Activation pecs + dos → Cardio léger</div>
+  </div>
+      <div class="session-progress" id="progress-upper" style="margin-bottom:16px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px">
+    <div class="sp-top"><div class="sp-label">Progression séance</div><div class="sp-count" id="progress-upper-text" style="color:var(--hiit)">0 / 8</div></div>
+    <div class="sp-bar-bg"><div class="sp-bar-fill" id="progress-upper-bar" style="width:0%;background:var(--hiit)"></div></div>
+  </div>
+
+  <!-- PECS -->
+  <div class="section-label" style="color:var(--hiit)">💛 Pecs</div>
+
+  <div class="ex-card hiit" id="upper-ex-0" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus" style="background:rgba(244,114,182,.04)">
+        <svg viewBox="0 0 52 52" fill="none"><rect x="8" y="22" width="36" height="8" rx="4" fill="rgba(244,114,182,0.15)" stroke="#f472b6" stroke-width="1.2"/><rect x="2" y="20" width="6" height="12" rx="3" fill="#f472b6" opacity=".7"/><rect x="44" y="20" width="6" height="12" rx="3" fill="#f472b6" opacity=".7"/><ellipse cx="26" cy="18" rx="6" ry="4" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="1"/><line x1="20" y1="30" x2="17" y2="38" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><line x1="32" y1="30" x2="35" y2="38" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="ex-info">
+        <div class="ex-name" style="color:var(--hiit)">Développé Haltères</div>
+        <div class="ex-cue">Coudes à 45° · Descente 3s · Poussée explosive</div>
+        <div class="ex-muscles">🎯 Pec maj · Deltoïde ant · Triceps</div>
+        <div class="ex-tags"><span class="ex-tag tag-db">Haltères</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-upper-0">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--hiit)">3×8–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="warmup-set-row"><span class="ws-label">🔆 Échauff.</span><span>1×15 très léger · activer les épaules</span></div>
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="upper-pr-0">—</b><span class="it-pr-suggestion" id="upper-sug-0"></span></div></div>
+        <div id="upper-sets-0"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="upper-note-0" placeholder="Charge par haltère, ressenti..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>90s</b></span><button class="psr-btn" onclick="startRest(90,event)">▶ 90s</button></div>
+      <button class="done-btn" id="done-upper-0" onclick="markDone('upper',0,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <div class="ex-card hiit" id="upper-ex-1" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus" style="background:rgba(244,114,182,.04)">
+        <svg viewBox="0 0 52 52" fill="none"><rect x="6" y="26" width="40" height="5" rx="2.5" fill="rgba(244,114,182,0.15)" stroke="#f472b6" stroke-width="1.2"/><circle cx="26" cy="18" r="5" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="1"/><line x1="10" y1="28" x2="8" y2="38" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><line x1="42" y1="28" x2="44" y2="38" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><text x="17" y="24" font-size="8" fill="#f472b6" opacity=".8">PUSH</text></svg>
+      </div>
+      <div class="ex-info">
+        <div class="ex-name" style="color:var(--hiit)">Pompes Lentes</div>
+        <div class="ex-cue">Tempo 3–1–1 · Gainage actif · Descente contrôlée</div>
+        <div class="ex-muscles">🎯 Pectoraux · Triceps · Core</div>
+        <div class="ex-tags"><span class="ex-tag tag-bw">Poids corps</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-upper-1">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--hiit)">3 séries</div><div class="sets-label">max reps</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="upper-pr-1">—</b><span class="it-pr-suggestion" id="upper-sug-1"></span></div></div>
+        <div id="upper-sets-1"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="upper-note-1" placeholder="Reps réalisées, qualité..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>60s</b></span><button class="psr-btn" onclick="startRest(60,event)">▶ 60s</button></div>
+      <button class="done-btn" id="done-upper-1" onclick="markDone('upper',1,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- DOS -->
+  <div class="section-label" style="color:var(--hiit)">🔙 Dos</div>
+
+  <div class="ex-card hiit" id="upper-ex-2" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus" style="background:rgba(244,114,182,.04)">
+        <svg viewBox="0 0 52 52" fill="none"><rect x="10" y="23" width="32" height="7" rx="3.5" fill="rgba(244,114,182,0.15)" stroke="#f472b6" stroke-width="1.2"/><ellipse cx="26" cy="18" rx="5" ry="4" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="1"/><line x1="15" y1="30" x2="12" y2="38" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><line x1="37" y1="30" x2="40" y2="38" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><path d="M10 26 Q6 22 10 18" stroke="#f472b6" stroke-width="1.2" fill="none" stroke-linecap="round"/><path d="M42 26 Q46 22 42 18" stroke="#f472b6" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <div class="ex-info">
+        <div class="ex-name" style="color:var(--hiit)">Rowing Haltères</div>
+        <div class="ex-cue">Tirage vers nombril · Coude collé · Squeeze en haut</div>
+        <div class="ex-muscles">🎯 Grand dorsal · Trapèzes · Rhomboïdes · Biceps</div>
+        <div class="ex-tags"><span class="ex-tag tag-db">Haltères</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-upper-2">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--hiit)">3×8–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="warmup-set-row"><span class="ws-label">🔆 Échauff.</span><span>1×12 léger · activer les dorsaux</span></div>
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="upper-pr-2">—</b><span class="it-pr-suggestion" id="upper-sug-2"></span></div></div>
+        <div id="upper-sets-2"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="upper-note-2" placeholder="Charge, amplitude..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>90s</b></span><button class="psr-btn" onclick="startRest(90,event)">▶ 90s</button></div>
+      <button class="done-btn" id="done-upper-2" onclick="markDone('upper',2,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <div class="ex-card hiit" id="upper-ex-3" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus" style="background:rgba(244,114,182,.04)">
+        <svg viewBox="0 0 52 52" fill="none"><line x1="26" y1="10" x2="26" y2="42" stroke="#f472b6" stroke-width="2" stroke-linecap="round"/><line x1="14" y1="28" x2="26" y2="20" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><circle cx="26" cy="16" r="4" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="1"/><path d="M14 28 Q10 30 14 34" stroke="#f472b6" stroke-width="1.2" fill="none" stroke-linecap="round"/><text x="17" y="41" font-size="8" fill="#f472b6" opacity=".7">UNI</text></svg>
+      </div>
+      <div class="ex-info">
+        <div class="ex-name" style="color:var(--hiit)">Tirage Unilatéral</div>
+        <div class="ex-cue">Un bras · Genou + main appuyés · Amplitude complète</div>
+        <div class="ex-muscles">🎯 Grand dorsal · Rhomboïdes · Trapèze · Biceps</div>
+        <div class="ex-tags"><span class="ex-tag tag-db">Haltère</span><span class="ex-tag tag-bw">Unilatéral</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-upper-3">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--hiit)">3×10–12</div><div class="sets-label">/côté</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="upper-pr-3">—</b><span class="it-pr-suggestion" id="upper-sug-3"></span></div></div>
+        <div id="upper-sets-3"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="upper-note-3" placeholder="Charge, côté dominant..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>75s</b></span><button class="psr-btn" onclick="startRest(75,event)">▶ 75s</button></div>
+      <button class="done-btn" id="done-upper-3" onclick="markDone('upper',3,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- ÉPAULES -->
+  <div class="section-label" style="color:var(--hiit)">🔵 Épaules</div>
+
+  <div class="ex-card hiit" id="upper-ex-4" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus" style="background:rgba(244,114,182,.04)">
+        <svg viewBox="0 0 52 52" fill="none"><line x1="8" y1="26" x2="22" y2="20" stroke="#f472b6" stroke-width="2" stroke-linecap="round"/><line x1="44" y1="26" x2="30" y2="20" stroke="#f472b6" stroke-width="2" stroke-linecap="round"/><circle cx="26" cy="18" r="5" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="1.2"/><circle cx="6" cy="26" r="3" fill="#f472b6" opacity=".5"/><circle cx="46" cy="26" r="3" fill="#f472b6" opacity=".5"/><line x1="23" y1="23" x2="20" y2="34" stroke="#f472b6" stroke-width="1.2" stroke-linecap="round"/><line x1="29" y1="23" x2="32" y2="34" stroke="#f472b6" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="ex-info">
+        <div class="ex-name" style="color:var(--hiit)">Élévations Latérales</div>
+        <div class="ex-cue">Coudes légèrement fléchis · Hauteur d'épaule · Descente lente</div>
+        <div class="ex-muscles">🎯 Deltoïde latéral · Trapèze supérieur</div>
+        <div class="ex-tags"><span class="ex-tag tag-db">Haltères</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-upper-4">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--hiit)">3×12–15</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="upper-pr-4">—</b><span class="it-pr-suggestion" id="upper-sug-4"></span></div></div>
+        <div id="upper-sets-4"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="upper-note-4" placeholder="Charge légère, contrôle..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>60s</b></span><button class="psr-btn" onclick="startRest(60,event)">▶ 60s</button></div>
+      <button class="done-btn" id="done-upper-4" onclick="markDone('upper',4,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <div class="ex-card hiit" id="upper-ex-5" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus" style="background:rgba(244,114,182,.04)">
+        <svg viewBox="0 0 52 52" fill="none"><rect x="16" y="24" width="20" height="7" rx="3.5" fill="rgba(244,114,182,0.15)" stroke="#f472b6" stroke-width="1.2"/><circle cx="26" cy="17" r="5" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="1"/><line x1="16" y1="27" x2="10" y2="22" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><line x1="36" y1="27" x2="42" y2="22" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="21" r="2.5" fill="#f472b6" opacity=".5"/><circle cx="44" cy="21" r="2.5" fill="#f472b6" opacity=".5"/></svg>
+      </div>
+      <div class="ex-info">
+        <div class="ex-name" style="color:var(--hiit)">Shoulder Press</div>
+        <div class="ex-cue">Poussée verticale · Coudes à 90° en bas · Pas de verrouillage</div>
+        <div class="ex-muscles">🎯 Deltoïde ant + lat · Triceps · Trapèzes</div>
+        <div class="ex-tags"><span class="ex-tag tag-db">Haltères</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-upper-5">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--hiit)">3×8–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="warmup-set-row"><span class="ws-label">🔆 Échauff.</span><span>1×12 très léger · mobiliser les épaules</span></div>
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="upper-pr-5">—</b><span class="it-pr-suggestion" id="upper-sug-5"></span></div></div>
+        <div id="upper-sets-5"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="upper-note-5" placeholder="Charge, stabilité épaules..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>75s</b></span><button class="psr-btn" onclick="startRest(75,event)">▶ 75s</button></div>
+      <button class="done-btn" id="done-upper-5" onclick="markDone('upper',5,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- BRAS -->
+  <div class="section-label" style="color:var(--hiit)">💪 Bras (optionnel)</div>
+
+  <div class="ex-card hiit" id="upper-ex-6" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus" style="background:rgba(244,114,182,.04)">
+        <svg viewBox="0 0 52 52" fill="none"><path d="M20 38 Q16 28 20 20 Q24 14 28 16 Q32 18 30 26 Q28 34 26 38Z" fill="rgba(244,114,182,0.15)" stroke="#f472b6" stroke-width="1.2"/><circle cx="26" cy="14" r="4" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="1"/><line x1="26" y1="38" x2="26" y2="44" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><rect x="21" y="43" width="10" height="4" rx="2" fill="#f472b6" opacity=".4"/></svg>
+      </div>
+      <div class="ex-info">
+        <div class="ex-name" style="color:var(--hiit)">Curl Biceps</div>
+        <div class="ex-cue">Coudes fixes · Supination en haut · Descente 3s</div>
+        <div class="ex-muscles">🎯 Biceps · Brachial · Brachio-radial</div>
+        <div class="ex-tags"><span class="ex-tag tag-db">Haltères</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-upper-6">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--hiit)">2×10–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="upper-pr-6">—</b><span class="it-pr-suggestion" id="upper-sug-6"></span></div></div>
+        <div id="upper-sets-6"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="upper-note-6" placeholder="Charge, descente lente..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>60s</b></span><button class="psr-btn" onclick="startRest(60,event)">▶ 60s</button></div>
+      <button class="done-btn" id="done-upper-6" onclick="markDone('upper',6,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <div class="ex-card hiit" id="upper-ex-7" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus" style="background:rgba(244,114,182,.04)">
+        <svg viewBox="0 0 52 52" fill="none"><path d="M22 16 Q18 22 20 30 Q22 36 26 38 Q30 36 32 30 Q34 22 30 16Z" fill="rgba(244,114,182,0.15)" stroke="#f472b6" stroke-width="1.2"/><circle cx="26" cy="13" r="4" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="1"/><line x1="26" y1="38" x2="26" y2="44" stroke="#f472b6" stroke-width="1.5" stroke-linecap="round"/><rect x="21" y="43" width="10" height="4" rx="2" fill="#f472b6" opacity=".4"/></svg>
+      </div>
+      <div class="ex-info">
+        <div class="ex-name" style="color:var(--hiit)">Extension Triceps</div>
+        <div class="ex-cue">Coudes près de la tête · Extension complète · Contrôle descent</div>
+        <div class="ex-muscles">🎯 Triceps (3 chefs)</div>
+        <div class="ex-tags"><span class="ex-tag tag-db">Haltère</span></div>
+        <div class="ex-pr-strip"><span class="ex-pr-strip-label">PR</span><span class="ex-pr-strip-val no-pr" id="strip-upper-7">—</span></div>
+      </div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--hiit)">2×10–12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="inline-tracker" onclick="event.stopPropagation()">
+        <div class="it-header"><div class="it-title">📝 SUIVI SÉANCE</div><div class="it-pr-info">PR actuel<b id="upper-pr-7">—</b><span class="it-pr-suggestion" id="upper-sug-7"></span></div></div>
+        <div id="upper-sets-7"></div>
+        <div class="it-note-label">Notes</div><textarea class="it-note" id="upper-note-7" placeholder="Charge, contrôle..."></textarea>
+      </div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>60s</b></span><button class="psr-btn" onclick="startRest(60,event)">▶ 60s</button></div>
+      <button class="done-btn" id="done-upper-7" onclick="markDone('upper',7,event)">✓ EXERCICE TERMINÉ</button>
+    </div>
+  </div>
+
+  <!-- ABDOS (même bloc que les autres jours) -->
+  
+  <div class="section-label" style="color:var(--abs)">⚡ ABDOS — 10 min</div><div class="ex-card abs" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><circle cx="6" cy="30" r="3.5" fill="#333" stroke="var(--abs)" stroke-width="1.5"/><line x1="10" y1="30" x2="24" y2="30" stroke="var(--abs)" stroke-width="2" stroke-dasharray="3 2"/><circle cx="34" cy="20" r="4.5" fill="#555"/><rect x="31" y="24" width="6" height="14" rx="3" fill="#3a3a3a"/><line x1="34" y1="28" x2="20" y2="28" stroke="#555" stroke-width="4" stroke-linecap="round"/></svg></div>
+      <div class="ex-info"><div class="ex-name">Cable Crunch</div><div class="ex-cue">Flexion du rachis · Mains fixes · Contraction max en bas</div><div class="ex-muscles">🎯 Grand droit, obliques</div><div class="ex-tags"><span class="ex-tag tag-cable">Câble</span></div></div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--abs)">3×15</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="muscles-detail"><strong>Surcharge progressive</strong>+2.5 kg dès que 15 reps propres sur toutes les séries.</div>
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>45s</b></span><button class="psr-btn" onclick="startRest(45,event)">▶ 45s</button></div>
+    </div>
+  </div>
+  <div class="ex-card abs" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="14" r="4.5" fill="#555"/><line x1="22" y1="18" x2="10" y2="38" stroke="#3a3a3a" stroke-width="4.5" stroke-linecap="round"/><line x1="26" y1="18" x2="38" y2="38" stroke="#3a3a3a" stroke-width="4.5" stroke-linecap="round"/><rect x="4" y="36" width="40" height="4" rx="2" fill="#555"/></svg></div>
+      <div class="ex-info"><div class="ex-name">Leg Raises</div><div class="ex-cue">Jambes tendues · Contrôle total · 0 élan</div><div class="ex-muscles">🎯 Bas du grand droit, psoas</div><div class="ex-tags"><span class="ex-tag tag-bw">Barre traction</span></div></div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--abs)">3×12</div><div class="sets-label">séries</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>45s</b></span><button class="psr-btn" onclick="startRest(45,event)">▶ 45s</button></div>
+    </div>
+  </div>
+  <div class="ex-card abs" onclick="toggleCard(this)">
+    <div class="ex-card-main">
+      <div class="ex-illus"><svg viewBox="0 0 48 48" fill="none"><rect x="6" y="30" width="36" height="4" rx="2" fill="#3a3a3a"/><circle cx="38" cy="26" r="4" fill="#555"/><rect x="4" y="34" width="6" height="8" rx="2" fill="var(--abs)" opacity=".4"/></svg></div>
+      <div class="ex-info"><div class="ex-name">Planche</div><div class="ex-cue">Standard + Side Plank G/D</div><div class="ex-muscles">🎯 Transverse, obliques, fessiers</div><div class="ex-tags"><span class="ex-tag tag-bw">Poids corps</span></div></div>
+      <div class="ex-right"><div class="sets-num" style="color:var(--abs)">2×40s</div><div class="sets-label">durée</div><div class="expand-arrow">▼</div></div>
+    </div>
+    <div class="ex-panel">
+      <div class="post-series-rest"><span class="psr-icon">⏸</span><span>Repos : <b>30s</b></span><button class="psr-btn" onclick="startRest(30,event)">▶ 30s</button></div>
+    </div>
+  </div>
+
+  <!-- CARDIO -->
+  
+  <div class="section-label" style="color:var(--cool)">🚶 CARDIO — Après séance</div>
+  <div style="background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.25);border-radius:14px;padding:14px 16px;margin-top:12px;font-size:13px;color:var(--muted2)">
+    <div style="color:var(--cool);font-weight:700;letter-spacing:1px;font-family:'Rajdhani',sans-serif;font-size:15px;margin-bottom:8px">🚶 CARDIO — Après la séance</div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>Exercice</span><span style="color:var(--text);font-weight:600">Marche inclinée</span></div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>Durée</span><span style="color:var(--text);font-weight:600">15–20 min</span></div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>Inclinaison</span><span style="color:var(--text);font-weight:600">8–12 %</span></div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0"><span>Vitesse</span><span style="color:var(--text);font-weight:600">4–5 km/h</span></div>
+  </div>
+
+  <div class="tip hiit" style="background:rgba(244,114,182,.04);border-left:3px solid var(--hiit);margin-top:12px">
+    <strong>💡 UPPER VENDREDI — RIR 1–2</strong>
+    Pecs + Dos composés en priorité. Bras optionnels si fatigue. Repos gros exos = 2–3 min, isolation = 60–90s. +2.5 kg quand toutes les reps sont propres.
+  </div>
+    <div class="synth-card" style="border-color:rgba(96,165,250,0.3);background:linear-gradient(135deg,rgba(96,165,250,0.04),transparent)">
+    <div class="synth-header">
+      <span class="synth-title" style="color:var(--cool)">❄️ RÉCUPÉRATION</span>
+      <span class="synth-time">7 min · Étirements statiques</span>
+    </div>
+    <div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Chest Stretch (bras contre mur) — 30s/côté</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Child's Pose (dorsaux) — 45s</span></div><div class="synth-row"><span class="synth-dot" style="background:var(--cool)"></span><span>Triceps + épaules — 30s/côté</span></div>
+  </div>
+  <div class="end-session-wrap"><button class="end-session-btn" style="background:linear-gradient(135deg,rgba(244,114,182,.15),rgba(244,114,182,.05));border:1px solid rgba(244,114,182,.4);color:var(--hiit)" onclick="endSession('upper')">🏁 TERMINER LA SÉANCE UPPER</button></div>
+</div>
+</div>
+</div>
+
+<div class="page" id="page-track">
+  <div class="tracker-header">SUIVI & PROGRESSION</div>
+  <div class="tracker-sub">Charge · Reps · PRs automatiques · Historique</div>
+  <div class="day-select">
+    <button class="day-sel-btn" onclick="setDay('push',this)">PUSH</button>
+    <button class="day-sel-btn" onclick="setDay('pull',this)">PULL</button>
+    <button class="day-sel-btn" onclick="setDay('legs',this)">LEGS</button>
+    <button class="day-sel-btn" onclick="setDay('upper',this)">UPPER</button>
+  </div>
+  <div class="week-sel">
+    <div class="week-sel-label">Semaine <b id="week-num-display">1</b> <span id="deload-indicator"></span></div>
+    <button class="week-num-btn" onclick="changeWeek(-1)">−</button>
+    <button class="week-num-btn" onclick="changeWeek(1)">+</button>
+  </div>
+  <div id="tracker-forms"></div>
+  <button class="save-btn" onclick="saveSession()">💾 SAUVEGARDER LA SÉANCE</button>
+  <div class="chart-section">
+    <div class="chart-header">
+      <div class="chart-title">📈 PROGRESSION</div>
+      <select class="chart-ex-select" id="chart-ex-sel" onchange="renderChart()"><option value="">— Choisir un exercice —</option></select>
+    </div>
+    <div class="chart-wrap"><canvas id="prog-chart" height="140"></canvas><div class="chart-empty" id="chart-empty">Sélectionne un exercice ci-dessus</div></div>
+  </div>
+  <div class="history-section">
+    <div class="history-title">HISTORIQUE</div>
+    <div id="history-list"></div>
+  </div>
+  <div class="io-wrap">
+    <button class="export-btn" onclick="exportData()">📤 Exporter</button>
+    <label class="import-btn">📥 Importer<input type="file" accept=".json" id="import-file" style="display:none" onchange="importData(event)"></label>
+  </div>
+  <button class="clear-btn" onclick="clearHistory()">🗑 Effacer tout l'historique</button>
+</div>
+
+<div class="page" id="page-plan">
+  <div class="info-card">
+    <h3 style="color:var(--text)">Ton Planning 📅</h3>
+    <div class="week-grid">
+      <div class="wday r"><span class="dname">LUN</span>REPOS</div>
+      <div class="wday pu"><span class="dname">MAR</span>PULL</div>
+      <div class="wday r"><span class="dname">MER</span>REPOS</div>
+      <div class="wday l"><span class="dname">JEU</span>LEGS</div>
+      <div class="wday h"><span class="dname">VEN</span>UPPER</div>
+      <div class="wday r"><span class="dname">SAM</span>REPOS</div>
+      <div class="wday p"><span class="dname">DIM</span>PUSH</div>
+    </div>
+    <div style="margin-top:12px;font-size:13px;color:var(--muted2);line-height:1.8">
+      <b style="color:var(--push)">Dimanche</b> → Push : Bench barre, Incline DB, Dips, Élév. lat., Ext. triceps — ❌ Pas de cardio<br>
+      <b style="color:var(--pull)">Mardi</b> → Pull : Tractions, Rowing, Tirage horiz., Face pull, Curl + Abdos + 🚶 Cardio<br>
+      <b style="color:var(--legs)">Jeudi</b> → Legs : Squat, Presse, Hip thrust, Bulgarian, Leg curl, Leg ext. + 🚶 Cardio — ❌ Pas d'abdos<br>
+      <b style="color:var(--hiit)">Vendredi</b> → Upper : Dev. DB, Pompes, Rowing, Tirage uni, Élév. lat., Shoulder press, Curl, Ext. tri + Abdos + 🚶 Cardio<br>
+      <b style="color:var(--muted2)">Lun / Mer / Sam</b> → Repos actif
+    </div>
+  </div>
+  <div class="info-card">
+    <h3 style="color:var(--text)">Structure séance — ~1h05</h3>
+    <div class="info-row"><div class="label">① Échauffement (ciblé Push/Pull/Legs)</div><div class="val">8 min</div></div>
+    <div class="info-row"><div class="label">② Abdos</div><div class="val">10 min</div></div>
+    <div class="info-row"><div class="label">③ Séance principale (5 ex.)</div><div class="val">50–55 min</div></div>
+    <div class="info-row"><div class="label">④ Récupération</div><div class="val">7 min</div></div>
+    <div class="info-row"><div class="label">Total chrono</div><div class="val"><b>~1h15 max</b></div></div>
+  </div>
+  <div class="info-card">
+    <h3 style="color:var(--push)">Semaines de Déload 🔄</h3>
+    <p style="font-size:12px;color:var(--muted2);margin-bottom:12px;line-height:1.6">Mêmes exercices, mêmes charges, -40% volume. OBLIGATOIRE.</p>
+    <div class="deload-plan">
+      <div class="deload-week"><div class="deload-week-num">1–4</div><div class="deload-week-label">Accumulation</div></div>
+      <div class="deload-week active"><div class="deload-week-num">5</div><div class="deload-week-label">DÉLOAD 🔄</div></div>
+      <div class="deload-week"><div class="deload-week-num">6–8</div><div class="deload-week-label">Intensification</div></div>
+      <div class="deload-week active"><div class="deload-week-num">9</div><div class="deload-week-label">DÉLOAD 🔄</div></div>
+      <div class="deload-week"><div class="deload-week-num">10–11</div><div class="deload-week-label">Peak</div></div>
+      <div class="deload-week"><div class="deload-week-num">12</div><div class="deload-week-label">Test PRs</div></div>
+    </div>
+  </div>
+  <div class="info-card">
+    <h3 style="color:var(--push)">Règles globales ⚙️</h3>
+    <div class="info-row"><div class="label">Repos — gros exercices</div><div class="val">2–3 min</div></div>
+    <div class="info-row"><div class="label">Repos — isolation</div><div class="val">60–90 sec</div></div>
+    <div class="info-row"><div class="label">Intensité (RIR)</div><div class="val">1–2 reps avant l'échec</div></div>
+    <div class="info-row"><div class="label">Tempo — descente</div><div class="val">2–3 secondes contrôlées</div></div>
+    <div class="info-row"><div class="label">Progression</div><div class="val">+2.5 kg quand reps validées</div></div>
+  </div>
+  <div class="info-card">
+    <h3 style="color:var(--green)">Nutrition — Masse propre</h3>
+    <div class="info-row"><div class="label">Surplus calorique</div><div class="val">+200 à +300 kcal/j</div></div>
+    <div class="info-row"><div class="label">Protéines</div><div class="val">2 – 2.2g / kg</div></div>
+    <div class="info-row"><div class="label">Glucides</div><div class="val">Autour des entraînements</div></div>
+    <div class="info-row"><div class="label">Sommeil</div><div class="val">8h minimum — priorité #1</div></div>
+  </div>
+  <div class="end-session-wrap"><button class="end-session-btn" style="background:linear-gradient(135deg,rgba(244,114,182,.15),rgba(244,114,182,.05));border:1px solid rgba(244,114,182,.4);color:var(--hiit)" onclick="endSession('upper')">🏁 TERMINER LA SÉANCE UPPER</button></div>
+</div>
+
+<script>
+// ══ DATA ══
+const exercises={
+  push:["Développé Couché Barre","Développé Incliné Haltères","Dips","Élévations Latérales","Extension Triceps Poulie"],
+  pull:["Tractions Lestées","Rowing Barre","Tirage Horizontal Machine","Face Pull","Curl Biceps"],
+  legs:["Squat Barre","Presse 45°","Hip Thrust Barre","Bulgarian Split Squat","Leg Curl Machine","Leg Extension"],
+  upper:["Développé Haltères","Pompes Lentes","Rowing Haltères","Tirage Unilatéral","Élévations Latérales Upper","Shoulder Press","Curl Biceps Upper","Extension Triceps Upper"]
+};
+const setsPerDay={push:[4,3,3,3,3],pull:[4,3,3,3,3],legs:[4,3,3,2,3,2],upper:[3,3,3,3,3,3,2,2]};
+const dayColors={push:'var(--push)',pull:'var(--pull)',legs:'var(--legs)',upper:'var(--hiit)'};
+const DELOAD_WEEKS=[5,9];
+let currentDay=null,currentWeek=1;
+const pageWeeks={push:1,pull:1,legs:1,upper:1};
+const doneState={push:[false,false,false,false,false],pull:[false,false,false,false,false],legs:[false,false,false,false,false,false],upper:[false,false,false,false,false,false,false,false]};
+
+// ══ HISTORY ══
+function getHistory(){return JSON.parse(localStorage.getItem('ppl_pro_history')||'[]');}
+function saveHistory(h){localStorage.setItem('ppl_pro_history',JSON.stringify(h));}
+
+// ══ PR LOOKUP ══
+function getBestForExercise(exName){
+  let best={kg:0,reps:0};
+  getHistory().forEach(sess=>{
+    sess.exercises?.forEach(ex=>{
+      if(ex.name===exName){
+        ex.series?.forEach(s=>{
+          const kg=parseFloat(s.kg)||0,reps=parseInt(s.reps)||0;
+          if(kg>best.kg||(kg===best.kg&&reps>best.reps))best={kg,reps};
+        });
+      }
+    });
+  });
+  return best;
+}
+
+// ══ UPDATE ALL LIVE PR STRIPS ══
+function refreshAllPRStrips(){
+  ['push','pull','legs','upper'].forEach(day=>{
+    exercises[day].forEach((ex,i)=>{
+      const stripEl=document.getElementById(`strip-${day}-${i}`);
+      if(!stripEl)return;
+      const best=getBestForExercise(ex);
+      if(best.kg>0){
+        stripEl.textContent=`${best.kg}kg × ${best.reps}`;
+        stripEl.className='ex-pr-strip-val';
+      } else {
+        stripEl.textContent='Premier PR à battre !';
+        stripEl.className='ex-pr-strip-val no-pr';
+      }
+      // Also update inline tracker header if visible
+      const prEl=document.getElementById(`${day}-pr-${i}`);
+      const sugEl=document.getElementById(`${day}-sug-${i}`);
+      if(prEl){
+        prEl.textContent=best.kg>0?`${best.kg}kg × ${best.reps}`:'Aucun PR';
+      }
+      if(sugEl){
+        sugEl.textContent=best.kg>0?`→ Vise ${best.kg+2.5}kg cette séance`:'';
+      }
+    });
+  });
+}
+
+// ══ SESSION TIMER ══
+let sessRunning=false,sessSeconds=0,sessInterval=null;
+function toggleSession(){
+  const btn=document.getElementById('session-btn');
+  if(!sessRunning){sessRunning=true;btn.textContent='⏹';btn.className='timer-btn timer-stop';sessInterval=setInterval(()=>{sessSeconds++;updateSessDisplay();},1000);}
+  else{sessRunning=false;btn.textContent='▶';btn.className='timer-btn timer-start';clearInterval(sessInterval);}
+}
+function resetSession(){clearInterval(sessInterval);sessRunning=false;sessSeconds=0;document.getElementById('session-btn').textContent='▶';document.getElementById('session-btn').className='timer-btn timer-start';updateSessDisplay();}
+function updateSessDisplay(){const m=String(Math.floor(sessSeconds/60)).padStart(2,'0'),s=String(sessSeconds%60).padStart(2,'0');document.getElementById('session-display').textContent=m+':'+s;}
+
+// ══ WARMUP DAY SELECTOR ══
+function selectWarm(day){
+  document.querySelectorAll('.warm-day-btn').forEach(b=>b.className='warm-day-btn');
+  document.querySelectorAll('.warm-block').forEach(b=>b.classList.remove('active'));
+  document.getElementById('warm-btn-'+day).className='warm-day-btn sel-'+day;
+  document.getElementById('warm-'+day).classList.add('active');
+}
+
+// ══ REST OVERLAY ══
+let restDuration=90,restRemaining=90,restInterval=null;
+const CIRC=2*Math.PI*80;
+function setRestDuration(s){restDuration=s;restRemaining=s;document.querySelectorAll('.rp-ov').forEach(b=>{b.classList.toggle('active',parseInt(b.textContent)===s||(s===120&&b.textContent==='2 min')||(s===180&&b.textContent==='3 min'));});updateRestDisplay();}
+function startRest(seconds,e){if(e)e.stopPropagation();restDuration=seconds;restRemaining=seconds;clearInterval(restInterval);document.getElementById('rest-overlay').classList.add('show');updateRestDisplay();restInterval=setInterval(()=>{restRemaining--;updateRestDisplay();if(restRemaining<=0){clearInterval(restInterval);skipRest();if('vibrate'in navigator)navigator.vibrate([200,100,200]);}},1000);}
+function updateRestDisplay(){document.getElementById('rest-count').textContent=restRemaining;const c=document.getElementById('rest-prog-circle'),ratio=restRemaining/restDuration,offset=CIRC*(1-ratio);c.style.strokeDasharray=CIRC;c.style.strokeDashoffset=offset;c.className='rest-prog'+(ratio<0.2?' urg':ratio<0.4?' warn':'');}
+function skipRest(){clearInterval(restInterval);document.getElementById('rest-overlay').classList.remove('show');}
+document.getElementById('rest-overlay').addEventListener('click',function(e){if(e.target===this)skipRest();});
+
+// ══ INLINE TIMERS ══
+const itState={};
+function getArcEl(id){return document.getElementById('ia-'+id);}
+function getDispEl(id){return document.getElementById('id-'+id);}
+function getBtnEl(id){return document.getElementById('ib-'+id);}
+function initIT(id,def){if(!itState[id])itState[id]={dur:def,rem:def,running:false,iv:null};return itState[id];}
+function setIT(id,sec){const st=initIT(id,sec);if(st.running){clearInterval(st.iv);st.running=false;}st.dur=sec;st.rem=sec;const btn=getBtnEl(id);if(btn){btn.textContent='▶ START';btn.className='itbtn start';}updateITDisplay(id);}
+function toggleIT(id){
+  const st=initIT(id,30);
+  if(st.running){clearInterval(st.iv);st.running=false;const btn=getBtnEl(id);if(btn){btn.textContent='▶ START';btn.className='itbtn start';}}
+  else{if(st.rem<=0)st.rem=st.dur;st.running=true;const btn=getBtnEl(id);if(btn){btn.textContent='⏸ PAUSE';btn.className='itbtn stop';}
+    st.iv=setInterval(()=>{st.rem--;updateITDisplay(id);if(st.rem<=0){clearInterval(st.iv);st.running=false;const b=getBtnEl(id);if(b){b.textContent='✓ DONE';b.className='itbtn start';}const d=getDispEl(id);if(d){d.textContent='GO!';d.className='inline-display done';}if('vibrate'in navigator)navigator.vibrate([150,80,150]);}},1000);}
+}
+function resetIT(id){const st=itState[id];if(!st)return;clearInterval(st.iv);st.running=false;st.rem=st.dur;const btn=getBtnEl(id);if(btn){btn.textContent='▶ START';btn.className='itbtn start';}updateITDisplay(id);}
+function updateITDisplay(id){const st=itState[id];if(!st)return;const d=getDispEl(id),arc=getArcEl(id);if(!d||!arc)return;const r=st.rem,dur=st.dur;const txt=r>=60?Math.floor(r/60)+'m'+(r%60>0?String(r%60).padStart(2,'0')+'s':''):r+'s';d.textContent=txt;const ratio=dur>0?r/dur:1,circ=2*Math.PI*17;arc.style.strokeDasharray=circ;arc.style.strokeDashoffset=circ*(1-ratio);if(r<=5&&r>0)d.className='inline-display urg';else if(r<=Math.floor(dur*0.35))d.className='inline-display warn';else d.className='inline-display';}
+
+// ══ TABS ══
+function show(id,btn,cls){
+  // Map old IDs that are now embedded
+  if(id==='warm'||id==='abs'||id==='cool') return;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  var pageId = (id==='upper') ? 'page-upper' : 'page-'+id;
+  document.getElementById(pageId).classList.add('active');
+  btn.classList.add('on');
+  if(id==='track'){renderHistory();populateChartSelect();}
+  if(id==='push'||id==='pull'||id==='legs'||id==='upper')renderInlineTrackers(id);
+}
+
+// ══ EXPAND CARDS ══
+function toggleCard(card){card.classList.toggle('expanded');}
+
+// ══ WEEK PER PAGE ══
+function changeWeekPage(day,d){
+  pageWeeks[day]=Math.max(1,Math.min(12,pageWeeks[day]+d));
+  const isD=DELOAD_WEEKS.includes(pageWeeks[day]);
+  document.getElementById(day+'-week-display').textContent=pageWeeks[day];
+  const tag=document.getElementById(day+'-deload-tag');
+  if(tag)tag.innerHTML=isD?'<span class="deload-tag">DÉLOAD 🔄</span>':'';
+  renderInlineTrackers(day);
+}
+
+// ══ INLINE TRACKER RENDERING ══
+function renderInlineTrackers(day){
+  const isD=DELOAD_WEEKS.includes(pageWeeks[day]);
+  exercises[day].forEach((ex,i)=>{
+    const container=document.getElementById(day+'-sets-'+i);
+    if(!container)return;
+    const best=getBestForExercise(ex);
+    // Update PR display in inline tracker header
+    const prEl=document.getElementById(day+'-pr-'+i);
+    const sugEl=document.getElementById(day+'-sug-'+i);
+    if(prEl)prEl.textContent=best.kg>0?`${best.kg}kg × ${best.reps}`:'Aucun PR';
+    if(sugEl)sugEl.textContent=best.kg>0?`→ Vise ${best.kg+2.5}kg`:'';
+    // Update strip
+    const stripEl=document.getElementById(`strip-${day}-${i}`);
+    if(stripEl){
+      if(best.kg>0){stripEl.textContent=`${best.kg}kg × ${best.reps}`;stripEl.className='ex-pr-strip-val';}
+      else{stripEl.textContent='Premier PR à battre !';stripEl.className='ex-pr-strip-val no-pr';}
+    }
+    const sc=Array.isArray(setsPerDay[day])?setsPerDay[day][i]:setsPerDay[day];
+    const seriesCount=isD?2:sc;
+    let html='';
+    for(let s=1;s<=seriesCount;s++){
+      const isFirst=(s===1);
+      html+=`<div class="it-series-row" id="it-row-${day}-${i}-${s}">
+        <div class="it-s-label">S${s}</div>
+        <input class="it-input" type="number" placeholder="kg" id="it-kg-${day}-${i}-${s}" min="0" step="0.5" onclick="event.stopPropagation()" oninput="checkInlinePR('${day}',${i},${s})">
+        <div class="it-unit">kg</div>
+        <input class="it-input" type="number" placeholder="reps" id="it-reps-${day}-${i}-${s}" min="0" onclick="event.stopPropagation()" oninput="checkInlinePR('${day}',${i},${s})">
+        ${s>1?`<button class="it-dup-btn" title="Dupliquer série précédente" onclick="dupSeries('${day}',${i},${s},event)">⧉</button>`:'<div style="width:28px"></div>'}
+        <button class="it-rest-btn" onclick="startRest(90,event)">⏱</button>
+      </div>`;
+    }
+    container.innerHTML=html;
+  });
+}
+
+// ══ CHECK PR INLINE ══
+function checkInlinePR(day,i,s){
+  const ex=exercises[day][i];
+  const kg=parseFloat(document.getElementById(`it-kg-${day}-${i}-${s}`)?.value)||0;
+  const reps=parseInt(document.getElementById(`it-reps-${day}-${i}-${s}`)?.value)||0;
+  const best=getBestForExercise(ex);
+  const row=document.getElementById(`it-row-${day}-${i}-${s}`);
+  const prEl=document.getElementById(day+'-pr-'+i);
+  if(kg>0&&(kg>best.kg||(kg===best.kg&&reps>best.reps))){
+    if(row)row.classList.add('is-pr');
+    if(prEl)prEl.innerHTML='<span class="it-pr-badge">🏆 PR!</span>';
+    if('vibrate'in navigator)navigator.vibrate(40);
+  } else {
+    if(row)row.classList.remove('is-pr');
+    if(prEl&&best.kg>0)prEl.textContent=`${best.kg}kg × ${best.reps}`;
+  }
+}
+
+
+// ══ DUPLICATE SERIES ══
+function dupSeries(day,i,s,e){
+  if(e)e.stopPropagation();
+  const prevKg=document.getElementById('it-kg-'+day+'-'+i+'-'+(s-1));
+  const prevReps=document.getElementById('it-reps-'+day+'-'+i+'-'+(s-1));
+  const kg=document.getElementById('it-kg-'+day+'-'+i+'-'+s);
+  const reps=document.getElementById('it-reps-'+day+'-'+i+'-'+s);
+  if(prevKg&&kg)kg.value=prevKg.value;
+  if(prevReps&&reps)reps.value=prevReps.value;
+  checkInlinePR(day,i,s);
+  // Flash animation
+  const row=document.getElementById('it-row-'+day+'-'+i+'-'+s);
+  if(row){row.style.transition='background .15s';row.style.background='rgba(74,222,128,.15)';setTimeout(()=>row.style.background='',400);}
+}
+
+// ══ MARK DONE ══
+function markDone(day,idx,e){
+  if(e)e.stopPropagation();
+  const card=document.getElementById(day+'-ex-'+idx);
+  const btn=document.getElementById('done-'+day+'-'+idx);
+  if(!card)return;
+  const isDone=card.classList.contains('done-ex');
+  if(!isDone){
+    card.classList.add('done-ex');if(btn){btn.textContent='✓ TERMINÉ';btn.classList.add('is-done');}
+    doneState[day][idx]=true;card.classList.remove('expanded');
+    const next=document.getElementById(day+'-ex-'+(idx+1));
+    if(next){next.classList.add('expanded');setTimeout(()=>next.scrollIntoView({behavior:'smooth',block:'start'}),200);}
+  } else {
+    card.classList.remove('done-ex');if(btn){btn.textContent='✓ EXERCICE TERMINÉ';btn.classList.remove('is-done');}doneState[day][idx]=false;
+  }
+  updateProgress(day);
+}
+function updateProgress(day){
+  const done=doneState[day].filter(Boolean).length,total=exercises[day].length,pct=Math.round((done/total)*100);
+  const bar=document.getElementById('progress-'+day+'-bar'),txt=document.getElementById('progress-'+day+'-text');
+  if(bar)bar.style.width=pct+'%';if(txt)txt.textContent=done+' / '+total;
+}
+
+// ══ END SESSION ══
+function endSession(day){
+  const exs=exercises[day],week=pageWeeks[day],isD=DELOAD_WEEKS.includes(week);
+  const date=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const session={day,date,week,exercises:[],timestamp:Date.now()};
+  let hasData=false;
+  exs.forEach((ex,i)=>{
+    const sc=Array.isArray(setsPerDay[day])?setsPerDay[day][i]:setsPerDay[day];
+    const sets=isD?2:sc,series=[];
+    for(let s=1;s<=sets;s++){
+      const kg=document.getElementById(`it-kg-${day}-${i}-${s}`)?.value;
+      const reps=document.getElementById(`it-reps-${day}-${i}-${s}`)?.value;
+      if(kg||reps){series.push({s,kg:kg||'—',reps:reps||'—'});hasData=true;}
+    }
+    const note=document.getElementById(day+'-note-'+i)?.value;
+    if(series.length||note)session.exercises.push({name:ex,series,note:note||''});
+  });
+  session.exercises.forEach(ex=>{
+    const best=getBestForExercise(ex.name);let thisBest=0;
+    ex.series.forEach(s=>{const kg=parseFloat(s.kg)||0;if(kg>thisBest)thisBest=kg;});
+    if(thisBest>best.kg&&thisBest>0)ex.isPR=true;
+  });
+  if(hasData){const h=getHistory();h.unshift(session);saveHistory(h.slice(0,100));}
+  // Refresh all PR strips after saving
+  refreshAllPRStrips();
+  doneState[day]=exercises[day].map(()=>false);
+  document.querySelectorAll(`#page-${day} .ex-card`).forEach(c=>c.classList.remove('done-ex','expanded'));
+  document.querySelectorAll(`#page-${day} .done-btn`).forEach(b=>{b.textContent='✓ EXERCICE TERMINÉ';b.classList.remove('is-done');});
+  updateProgress(day);
+  const done=doneState[day].filter(Boolean).length,total=exercises[day].length;
+  alert(hasData?`✅ Séance ${day.toUpperCase()} enregistrée !`:`✅ Séance ${day.toUpperCase()} terminée (aucune donnée saisie)`);
+}
+
+// ══ TRACKER PAGE ══
+function setDay(day,btn){
+  currentDay=day;
+  document.querySelectorAll('.day-sel-btn').forEach(b=>b.className='day-sel-btn');
+  btn.className='day-sel-btn sel-'+day;
+  renderForms(day);renderHistory();populateChartSelect();
+}
+function renderForms(day){
+  const c=dayColors[day],exs=exercises[day],isD=DELOAD_WEEKS.includes(currentWeek);
+  let html='';
+  if(isD)html+=`<div style="background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--muted2)"><b style="color:var(--push)">🔄 SEMAINE DE DÉLOAD</b> — Mêmes charges, réduire le volume de 40%. 2 séries au lieu de 4.</div>`;
+  exs.forEach((ex,i)=>{
+    const best=getBestForExercise(ex);
+    const bestStr=best.kg>0?`${best.kg}kg × ${best.reps}`:'Aucun PR';
+    const sugStr=best.kg>0?`→ Vise ${best.kg+2.5}kg`:'';
+    const sc=Array.isArray(setsPerDay[day])?setsPerDay[day][i]:setsPerDay[day];
+    const seriesCount=isD?2:sc;
+    html+=`<div class="track-form" id="tf-${i}">
+      <div class="track-ex-header">
+        <div class="track-ex-name" style="color:${c}">${ex}</div>
+        <div class="track-pr-block">
+          <span class="track-best">PR actuel</span>
+          <span class="track-pr-val" id="tpr-${i}">${best.kg>0?bestStr:'—'}</span>
+          <span class="track-pr-suggest">${sugStr}</span>
+        </div>
+      </div>`;
+    for(let s=1;s<=seriesCount;s++){
+      html+=`<div class="series-row" id="trow-${i}-${s}">
+        <div class="series-label">S${s}</div>
+        <input class="track-input" type="number" placeholder="kg" id="kg_${i}_${s}" min="0" step="0.5" oninput="checkTrackPR(${i},${s},'${day}')">
+        <div class="unit-label">kg</div>
+        <input class="track-input" type="number" placeholder="reps" id="reps_${i}_${s}" min="0" oninput="checkTrackPR(${i},${s},'${day}')">
+        <div class="unit-label">×</div>
+        <button class="rest-trigger" onclick="startRest(90,event)">⏱ Repos</button>
+      </div>`;
+    }
+    html+=`<div class="track-note-wrap"><textarea class="track-note" id="tnote_${i}" placeholder="Note pour ${ex}..."></textarea></div></div>`;
+  });
+  document.getElementById('tracker-forms').innerHTML=html;
+}
+
+function checkTrackPR(i,s,day){
+  const ex=exercises[day][i];
+  const kg=parseFloat(document.getElementById(`kg_${i}_${s}`)?.value)||0;
+  const reps=parseInt(document.getElementById(`reps_${i}_${s}`)?.value)||0;
+  const best=getBestForExercise(ex);
+  const row=document.getElementById(`trow-${i}-${s}`);
+  const prEl=document.getElementById(`tpr-${i}`);
+  const form=document.getElementById(`tf-${i}`);
+  if(kg>0&&(kg>best.kg||(kg===best.kg&&reps>best.reps))){
+    if(row)row.classList.add('is-pr');
+    if(prEl)prEl.innerHTML='<span class="pr-badge">🏆 Nouveau PR!</span>';
+    if(form)form.classList.add('has-pr');
+    if('vibrate'in navigator)navigator.vibrate(40);
+  } else {
+    if(row)row.classList.remove('is-pr');
+    if(prEl)prEl.textContent=best.kg>0?`${best.kg}kg × ${best.reps}`:'—';
+    if(form)form.classList.remove('has-pr');
+  }
+}
+
+function saveSession(){
+  if(!currentDay){alert('Sélectionne un jour !');return;}
+  const exs=exercises[currentDay];
+  const date=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const session={day:currentDay,date,week:currentWeek,exercises:[],timestamp:Date.now()};
+  let hasData=false;
+  exs.forEach((ex,i)=>{
+    const sc=Array.isArray(setsPerDay[currentDay])?setsPerDay[currentDay][i]:setsPerDay[currentDay];
+    const seriesCount=DELOAD_WEEKS.includes(currentWeek)?2:sc;
+    const series=[];
+    for(let s=1;s<=seriesCount;s++){
+      const kg=document.getElementById(`kg_${i}_${s}`)?.value;
+      const reps=document.getElementById(`reps_${i}_${s}`)?.value;
+      if(kg||reps){series.push({s,kg:kg||'—',reps:reps||'—'});hasData=true;}
+    }
+    const note=document.getElementById(`tnote_${i}`)?.value;
+    if(series.length||note)session.exercises.push({name:ex,series,note:note||''});
+  });
+  if(!hasData){alert('Entre au moins une donnée !');return;}
+  session.exercises.forEach(ex=>{
+    const best=getBestForExercise(ex.name);let thisBest=0;
+    ex.series.forEach(s=>{const kg=parseFloat(s.kg)||0;if(kg>thisBest)thisBest=kg;});
+    if(thisBest>best.kg&&thisBest>0)ex.isPR=true;
+  });
+  const h=getHistory();h.unshift(session);saveHistory(h.slice(0,100));
+  refreshAllPRStrips();
+  renderHistory();alert('✅ Séance sauvegardée !');
+}
+
+function renderHistory(){
+  const h=getHistory(),list=document.getElementById('history-list');if(!list)return;
+  if(!h.length){list.innerHTML='<div class="no-history">Aucune séance. Commence ta première séance !</div>';return;}
+  const filtered=currentDay?h.filter(s=>s.day===currentDay):h;
+  if(!filtered.length){list.innerHTML='<div class="no-history">Aucune séance pour ce jour.</div>';return;}
+  list.innerHTML=filtered.slice(0,10).map(sess=>`
+    <div class="history-card">
+      <div class="history-date">${sess.day?.toUpperCase()} — Sem. ${sess.week||'?'} — ${sess.date}</div>
+      ${sess.exercises?.map(ex=>`
+        <div class="history-ex"><b>${ex.name}</b>${ex.isPR?'<span class="hpr"> 🏆PR</span>':''} — ${ex.series?.map(s=>`S${s.s}: <span>${s.kg}kg×${s.reps}</span>`).join(' · ')}${ex.note?`<br><span style="color:var(--muted);font-size:11px">${ex.note}</span>`:''}</div>
+      `).join('')}
+    </div>`).join('');
+}
+function clearHistory(){if(confirm('Effacer tout ?')){saveHistory([]);renderHistory();refreshAllPRStrips();}}
+
+// ══ CHART ══
+let chartInst=null;
+function populateChartSelect(){
+  const sel=document.getElementById('chart-ex-sel');if(!sel)return;
+  sel.innerHTML='<option value="">— Choisir un exercice —</option>';
+  (exercises[currentDay]||[]).forEach(ex=>{const o=document.createElement('option');o.value=ex;o.textContent=ex;sel.appendChild(o);});
+}
+function renderChart(){
+  const sel=document.getElementById('chart-ex-sel'),exName=sel?.value;
+  const empty=document.getElementById('chart-empty'),canvas=document.getElementById('prog-chart');
+  if(!exName||!currentDay){empty.style.display='block';canvas.style.display='none';return;}
+  const h=getHistory().filter(s=>s.day===currentDay).reverse();
+  const pts=[];
+  h.forEach(sess=>{const ex=sess.exercises?.find(e=>e.name===exName);if(ex){let b=0;ex.series?.forEach(s=>{const kg=parseFloat(s.kg)||0;if(kg>b)b=kg;});if(b>0)pts.push({date:sess.date.slice(0,5),kg:b,isPR:ex.isPR});}});
+  if(pts.length<2){empty.style.display='block';empty.textContent='Pas assez de données (2 séances min).';canvas.style.display='none';return;}
+  empty.style.display='none';canvas.style.display='block';
+  const c=currentDay==='push'?'rgba(245,200,66':currentDay==='pull'?'rgba(255,94,58':'rgba(58,232,192';
+  const ctx=canvas.getContext('2d');if(chartInst)chartInst.destroy();
+  chartInst=new Chart(ctx,{type:'line',data:{labels:pts.map(p=>p.date),datasets:[{data:pts.map(p=>p.kg),borderColor:c+',1)',backgroundColor:c+',.08)',borderWidth:2,pointRadius:pts.map(p=>p.isPR?7:4),pointBackgroundColor:pts.map(p=>p.isPR?'#ffd700':c+',1)'),tension:.3,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#555',font:{size:10}},grid:{color:'#1e1e1e'}},y:{ticks:{color:'#555',font:{size:10},callback:v=>v+'kg'},grid:{color:'#1e1e1e'}}}}});
+}
+
+// ══ EXPORT / IMPORT ══
+function exportData(){
+  const h=getHistory();if(!h.length){alert('Aucune donnée !');return;}
+  const blob=new Blob([JSON.stringify({app:'PPL Pro v6',date:new Date().toLocaleDateString('fr-FR'),total:h.length,history:h},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`ppl-pro-v6-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(url);
+}
+function importData(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      const imported=data.history||data;if(!Array.isArray(imported))throw new Error();
+      const existing=getHistory();const existingKeys=new Set(existing.map(s=>s.date+s.day));
+      const newS=imported.filter(s=>!existingKeys.has(s.date+s.day));
+      saveHistory([...newS,...existing].slice(0,200));
+      refreshAllPRStrips();renderHistory();alert(`✅ ${newS.length} séance(s) importée(s) !`);
+    }catch{alert('❌ Fichier invalide.');}
+  };
+  reader.readAsText(file);event.target.value='';
+}
+
+// ══ WEEK TRACKER PAGE ══
+function changeWeek(d){
+  currentWeek=Math.max(1,Math.min(12,currentWeek+d));
+  document.getElementById('week-num-display').textContent=currentWeek;
+  const isD=DELOAD_WEEKS.includes(currentWeek);
+  document.getElementById('deload-indicator').innerHTML=isD?'<span class="deload-tag">DÉLOAD 🔄</span>':'';
+  if(currentDay)renderForms(currentDay);
+}
+
+// Load Chart.js
+const cs=document.createElement('script');cs.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';document.head.appendChild(cs);
+
+// ══ INJECT INITIAL DATA FROM PHOTO (07/04/2026 PULL SEM.1) ══
+(function(){
+  const KEY='ppl_pro_history';
+  const existing=JSON.parse(localStorage.getItem(KEY)||'[]');
+  const entryId='pull_07/04/2026 21:10';
+  const alreadyIn=existing.some(s=>s.day==='pull'&&s.date==='07/04/2026 21:10');
+  if(!alreadyIn){
+    const session={
+      day:'pull',
+      date:'07/04/2026 21:10',
+      week:1,
+      timestamp:1744060200000,
+      exercises:[
+        {name:'Tractions Lestées',isPR:true,series:[
+          {s:1,kg:'7.5',reps:'6'},
+          {s:2,kg:'10',reps:'6'},
+          {s:3,kg:'10',reps:'5'},
+          {s:4,kg:'10',reps:'4'}
+        ],note:''},
+        {name:'Rowing Barre',isPR:true,series:[
+          {s:1,kg:'59',reps:'8'},
+          {s:2,kg:'66',reps:'8'},
+          {s:3,kg:'66',reps:'8'}
+        ],note:''},
+        {name:'Tirage Horizontal Machine',isPR:true,series:[
+          {s:1,kg:'66',reps:'10'},
+          {s:2,kg:'66',reps:'10'},
+          {s:3,kg:'73',reps:'8'}
+        ],note:''},
+        {name:'Face Pull',isPR:true,series:[
+          {s:1,kg:'14',reps:'12'},
+          {s:2,kg:'27',reps:'12'},
+          {s:3,kg:'27',reps:'12'}
+        ],note:''},
+        {name:'Curl Biceps',isPR:true,series:[
+          {s:1,kg:'25',reps:'12'},
+          {s:2,kg:'25',reps:'10'},
+          {s:3,kg:'25',reps:'6'}
+        ],note:''}
+      ]
+    };
+    existing.unshift(session);
+    localStorage.setItem(KEY,JSON.stringify(existing.slice(0,200)));
+  }
+})();
+
+// ══ PWA / iOS INSTALL BANNER ══
+function dismissPWABanner(){
+  document.getElementById('pwa-banner').classList.remove('show');
+  localStorage.setItem('pwa_banner_dismissed','1');
+}
+
+function checkIOSInstall(){
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone=('standalone' in navigator)&&navigator.standalone;
+  const dismissed=localStorage.getItem('pwa_banner_dismissed');
+  if(isIOS && !isStandalone && !dismissed){
+    setTimeout(()=>{
+      document.getElementById('pwa-banner').classList.add('show');
+    },2500);
+  }
+}
+checkIOSInstall();
+
+// ══ SERVICE WORKER (offline support) ══
+if('serviceWorker' in navigator){
+  const swCode=`
+const CACHE='training-ppl-v1';
+const ASSETS=[location.href];
+self.addEventListener('install',e=>{
+  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));
+  self.skipWaiting();
+});
+self.addEventListener('activate',e=>{
+  e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+  self.clients.claim();
+});
+self.addEventListener('fetch',e=>{
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+    const clone=res.clone();
+    caches.open(CACHE).then(c=>c.put(e.request,clone));
+    return res;
+  }).catch(()=>caches.match('/'))));
+});
+`;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  const swURL=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swURL).catch(()=>{});
+}
+
+// ══ INIT ══
+refreshAllPRStrips();
+renderHistory();
+['push','pull','legs','upper'].forEach(d=>updateProgress(d));
+</script>
+</body>
+</html>
